@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1826 740" role="img" aria-labelledby="title">
+  <title id="title">Fast Print Sahline</title>
+  <g fill="#050505">
+    <rect x="166" y="157" width="31" height="19" rx="9.5" />
+    <rect x="214" y="157" width="84" height="19" rx="9.5" />
+    <rect x="105" y="198" width="220" height="21" rx="10.5" />
+    <rect x="130" y="239" width="172" height="19" rx="9.5" />
+    <rect x="120" y="441" width="50" height="18" rx="9" />
+  </g>
+  <g fill="#ffca05">
+    <rect x="8" y="275" width="231" height="19" rx="9.5" />
+  </g>
+  <g fill="#079be5">
+    <rect x="66" y="310" width="108" height="20" rx="10" />
+    <rect x="135" y="352" width="75" height="21" rx="10.5" />
+  </g>
+  <g fill="#ec008c">
+    <rect x="181" y="310" width="46" height="20" rx="10" />
+    <rect x="86" y="399" width="102" height="22" rx="11" />
+  </g>
+  <path fill="#050505" fill-rule="evenodd" d="M232 563 353 211c14-39 39-59 79-59h142c85 0 137 48 137 122 0 75-53 119-139 119H463l-68 170z M414 337h154c43 0 68-22 68-60 0-36-24-55-66-55H445c-19 0-30 10-37 29z" />
+  <path fill="#ec008c" d="m449 240 91 1-25 62h-91z" />
+  <path fill="#079be5" d="m423 305 92-1-10 22h-91z" />
+  <path fill="#ffca05" d="m184 481 102-1-8 21H175z" />
+  <path fill="#ec008c" d="m176 502 103-1-8 21H168z" />
+  <path fill="#079be5" d="m169 523 102-1-12 25c-6 11-14 15-27 15h-99z" />
+  <text x="738" y="377" fill="#050505" font-family="Arial, Helvetica, sans-serif" font-size="184" font-style="italic" font-weight="900" letter-spacing="-8">FAST PRINT</text>
+  <text x="709" y="510" fill="#050505" font-family="Arial, Helvetica, sans-serif" font-size="108" font-weight="500" letter-spacing="85">SAHLINE</text>
+  <rect x="710" y="546" width="255" height="18" fill="#079be5" />
+  <rect x="965" y="546" width="253" height="18" fill="#ec008c" />
+  <rect x="1218" y="546" width="263" height="18" fill="#ffca05" />
+  <rect x="1481" y="546" width="244" height="18" fill="#050505" />
+</svg>

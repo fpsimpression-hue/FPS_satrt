@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 type BrandProps = {
@@ -6,26 +7,17 @@ type BrandProps = {
   footer?: boolean;
 };
 
-export function Brand({ href, locale = "fr", footer = false }: BrandProps) {
+export function Brand({ href, footer = false }: BrandProps) {
   return (
-    <Link
-      aria-label="Fast Print Sahline"
-      className={footer ? "brand brand-footer" : "brand"}
-      href={href}
-    >
-      <span className="brand-mark" aria-hidden="true">
-        <span className="brand-letters">FPS</span>
-        <span className="brand-petals">
-          <i />
-          <i />
-          <i />
-          <i />
-        </span>
-      </span>
-      <span className="brand-name">
-        {locale === "ar" ? "طباعة وإشهار" : locale === "en" ? "PRINT & PUBLICITY" : "IMPRESSION & PUBLICITÉ"}
-        <small>SAHLINE · TUNISIE</small>
-      </span>
+    <Link aria-label="Fast Print Sahline" className={footer ? "brand brand-footer" : "brand"} href={href}>
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="brand-logo"
+        height={740}
+        src={footer ? "/fast-print-sahline-light.svg" : "/fast-print-sahline.svg"}
+        width={1826}
+      />
     </Link>
   );
 }

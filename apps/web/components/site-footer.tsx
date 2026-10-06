@@ -5,32 +5,62 @@ type SiteFooterProps = { locale?: "fr" | "ar" | "en" };
 const labels = {
   fr: {
     phone: "Appelez-nous", email: "Écrivez-nous", location: "Atelier",
-    project: "Parlons de votre projet", faq: "FAQ", title: "Une idée à imprimer ?",
-    body: "Décrivez-nous le support souhaité, la quantité et les finitions envisagées. Nous pourrons étudier votre demande.",
-    admin: "Espace équipe", city: "Sahline, Monastir, Tunisie",
-    tagline: "Impression soignée. Idées sans limites.",
+    project: "Parlons de votre projet", title: "Une idée à imprimer ?",
+    body: "Décrivez-nous le support souhaité, la quantité et les finitions envisagées. Nous étudierons votre demande.",
+    about: "À propos", links: "Liens utiles", support: "Assistance", contact: "Contact",
+    services: "Services", catalogue: "Catalogue", gallery: "Réalisations", pricing: "Tarifs", faq: "Questions fréquentes",
+    quote: "Demander un devis", admin: "Espace équipe", socials: "Suivez-nous",
+    city: "Sahline, Monastir, Tunisie", description: "Atelier d’impression à Sahline : papier, textile et grand format, du devis à la livraison.",
+    copyright: "Tous droits réservés.",
   },
   ar: {
     phone: "اتصلوا بنا", email: "راسلونا", location: "الورشة",
-    project: "لنتحدث عن مشروعكم", faq: "الأسئلة الشائعة", title: "لديكم فكرة للطباعة؟",
+    project: "لنتحدث عن مشروعكم", title: "لديكم فكرة للطباعة؟",
     body: "أخبرونا عن المنتج والكمية والتشطيبات المطلوبة لندرس طلبكم.",
-    admin: "مساحة الفريق", city: "الساحلين، المنستير، تونس",
-    tagline: "طباعة متقنة. أفكار بلا حدود.",
+    about: "من نحن", links: "روابط مفيدة", support: "المساعدة", contact: "اتصلوا بنا",
+    services: "خدماتنا", catalogue: "المنتجات", gallery: "أعمالنا", pricing: "الأسعار", faq: "الأسئلة الشائعة",
+    quote: "طلب عرض سعر", admin: "مساحة الفريق", socials: "تابعونا",
+    city: "الساحلين، المنستير، تونس", description: "ورشة طباعة في الساحلين: الورق والمنسوجات والطباعة كبيرة الحجم، من عرض السعر إلى التسليم.",
+    copyright: "جميع الحقوق محفوظة.",
   },
   en: {
     phone: "Call us", email: "Email us", location: "Workshop",
-    project: "Tell us about your project", faq: "FAQ", title: "Have an idea to print?",
-    body: "Tell us what you need, how many you need and any finishes you have in mind. We can review your request.",
-    admin: "Team workspace", city: "Sahline, Monastir, Tunisia",
-    tagline: "Thoughtful printing. Ideas without limits.",
+    project: "Tell us about your project", title: "Have an idea to print?",
+    body: "Tell us what you need, the quantity and any finishes you have in mind. We will review your request.",
+    about: "About Us", links: "Useful Links", support: "Support", contact: "Contact Us",
+    services: "Services", catalogue: "Catalogue", gallery: "Our work", pricing: "Pricing", faq: "Frequently asked questions",
+    quote: "Request a quote", admin: "Team workspace", socials: "Follow us",
+    city: "Sahline, Monastir, Tunisia", description: "Print studio in Sahline for paper, textile and large format, from quote to delivery.",
+    copyright: "All rights reserved.",
   },
 } as const;
 
+function ContactIcon({ kind }: { kind: "phone" | "email" | "location" }) {
+  const paths = {
+    phone: <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24 11.4 11.4 0 0 0 3.56.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .57 3.56 1 1 0 0 1-.25 1Z" />,
+    email: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></>,
+    location: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
+  };
+
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill={kind === "phone" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[kind]}</svg>;
+}
+
+function SocialIcon({ name }: { name: "Facebook" | "X" | "Instagram" | "LinkedIn" }) {
+  if (name === "Facebook") return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V3.6c-.3 0-1.3-.1-2.4-.1-2.4 0-4.1 1.5-4.1 4.2v2.2H7.6V13h2.7v8z" /></svg>;
+  if (name === "X") return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18.9 3H22l-6.8 7.8L23.2 21h-6.3L12 14.7 6.4 21H3.2l7.3-8.4L2.8 3h6.5l4.4 5.8zm-1.1 16h1.7L8.2 4.9H6.4z" /></svg>;
+  if (name === "Instagram") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" /></svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 3.8A2.2 2.2 0 1 1 5 8.2a2.2 2.2 0 0 1 0-4.4ZM3.2 9.8h3.6V21H3.2zm5.8 0h3.5v1.5h.1a3.8 3.8 0 0 1 3.4-1.8c3.6 0 4.3 2.4 4.3 5.5V21h-3.6v-5.3c0-1.3 0-3-1.9-3s-2.2 1.4-2.2 2.9V21H9z" /></svg>;
+}
+
 export function SiteFooter({ locale = "fr" }: SiteFooterProps) {
   const text = labels[locale];
+  const socialProfiles = { Facebook: "https://www.facebook.com/p/Fast-Print-Sahline-Page-100054267831226/" } as const;
+  const mapsQuery = encodeURIComponent("Fast Print, QP37+6VJ, Sahline, Tunisia");
+  const mapsLink = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
+  const mapsEmbed = `https://www.google.com/maps?q=${mapsQuery}&output=embed`;
 
   return (
-    <footer className="site-footer">
+    <footer className="site-footer" dir={locale === "ar" ? "rtl" : "ltr"}>
       <section className="contact footer-contact-section section-wrap" id="contact">
         <div className="contact-copy">
           <p className="eyebrow"><span />{text.project}</p>
@@ -48,26 +78,63 @@ export function SiteFooter({ locale = "fr" }: SiteFooterProps) {
             <small>{text.email}</small>
             <strong dir="ltr">fps.impression@gmail.com</strong>
           </a>
-          <div className="contact-card contact-location">
+          <a className="contact-card contact-location" href={mapsLink} target="_blank" rel="noreferrer">
             <span aria-hidden="true">⌖</span>
             <small>{text.location}</small>
             <strong>{text.city}</strong>
-          </div>
+          </a>
+        </div>
+        <div className="contact-map">
+          <iframe src={mapsEmbed} title={`Google Maps — ${text.city}`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
         </div>
       </section>
-      <div className="footer-lower">
-        <div className="footer-brand">
+
+      <div className="footer-main">
+        <div className="footer-column footer-brand-column">
           <Brand footer href={`/?lang=${locale}`} locale={locale} />
-          <p className="footer-description">
-            Imprimerie à Sahline, Monastir, papier, textile et grand format, du devis à la livraison.
-          </p>
+          <p className="footer-description">{text.description}</p>
+          <div className="footer-social-block">
+            <h2>{text.socials}</h2>
+            <div className="footer-socials" aria-label={text.socials}>
+              {(["Facebook", "X", "Instagram", "LinkedIn"] as const).map((name) => (
+                name === "Facebook" ? (
+                  <a aria-label={name} className="footer-social-icon" href={socialProfiles.Facebook} key={name} rel="noreferrer" target="_blank" title={name}>
+                    <SocialIcon name={name} />
+                  </a>
+                ) : (
+                  <span aria-label={name} className="footer-social-icon" key={name} role="img" title={name}>
+                    <SocialIcon name={name} />
+                  </span>
+                )
+              ))}
+            </div>
+          </div>
         </div>
-        <p className="footer-tagline">{text.tagline}</p>
-        <a className="footer-contact" href="#contact">{text.project}</a>
-        <a className="footer-faq" href={`/faq?lang=${locale}`}>{text.faq}</a>
-        <a className="admin-entry" href="/admin">{text.admin}</a>
-        <span>© {new Date().getFullYear()} Fast Print Sahline</span>
+
+        <nav className="footer-column" aria-label={text.links}>
+          <h2>{text.links}</h2>
+          <a href={`/?lang=${locale}#about-us`}>{text.about}</a>
+          <a href={`/services?lang=${locale}`}>{text.services}</a>
+          <a href={`/catalogue?lang=${locale}`}>{text.catalogue}</a>
+          <a href={`/realisations?lang=${locale}`}>{text.gallery}</a>
+          <a href={`/?lang=${locale}#tarifs`}>{text.pricing}</a>
+        </nav>
+
+        <nav className="footer-column" aria-label={text.support}>
+          <h2>{text.support}</h2>
+          <a href={`/faq?lang=${locale}`}>{text.faq}</a>
+          <a href={`/devis?lang=${locale}`}>{text.quote}</a>
+          <a href="/admin">{text.admin}</a>
+        </nav>
+
+        <div className="footer-column footer-contact-column">
+          <h2>{text.contact}</h2>
+          <a href="tel:+21623267178"><span><ContactIcon kind="phone" /></span><b dir="ltr">+216 23 267 178</b></a>
+          <a href="mailto:fps.impression@gmail.com"><span><ContactIcon kind="email" /></span><b dir="ltr">fps.impression@gmail.com</b></a>
+          <a href={mapsLink} target="_blank" rel="noreferrer"><span><ContactIcon kind="location" /></span><b>{text.city}</b></a>
+        </div>
       </div>
+      <div className="footer-bottom"><span>© {new Date().getFullYear()} Fast Print Sahline</span><span>{text.copyright}</span></div>
     </footer>
   );
 }

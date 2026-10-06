@@ -46,6 +46,18 @@ const copy = {
     missingFile: "Ajoutez votre fichier prêt à imprimer pour confirmer une commande.",
     required: "Obligatoire",
     language: "Langue",
+    product: "Produit",
+    fileLabel: "Fichier",
+    notes: "Détails de votre demande (facultatif)",
+    channel: "Mode d’envoi",
+    team: "Envoyer à l’équipe Fast Print",
+    teamDescription: "La demande sera enregistrée dans l’espace équipe pour suivi.",
+    whatsapp: "Continuer sur WhatsApp",
+    whatsappDescription: "Un message prérempli s’ouvrira. Vous pourrez joindre votre fichier dans la conversation.",
+    whatsappGreeting: "Bonjour Fast Print Sahline, je souhaite envoyer cette demande.",
+    whatsappAttachment: "Je joindrai le fichier dans cette conversation.",
+    whatsappReady: "Votre message WhatsApp est prêt.",
+    whatsappOpen: "Ouvrir WhatsApp",
     whatsappConsent: "J’accepte de recevoir sur WhatsApp les mises à jour concernant cette demande ou commande. Je peux retirer mon accord en contactant l’atelier.",
   },
   ar: {
@@ -75,6 +87,18 @@ const copy = {
     missingFile: "أضيفوا ملفكم الجاهز للطباعة لتأكيد الطلب.",
     required: "مطلوب",
     language: "اللغة",
+    product: "المنتج",
+    fileLabel: "الملف",
+    notes: "تفاصيل الطلب (اختياري)",
+    channel: "طريقة الإرسال",
+    team: "إرسال إلى فريق فاست برينت",
+    teamDescription: "سيُحفظ الطلب في مساحة الفريق للمتابعة.",
+    whatsapp: "المتابعة عبر واتساب",
+    whatsappDescription: "ستُفتح رسالة جاهزة، ويمكنكم إرفاق الملف في المحادثة.",
+    whatsappGreeting: "مرحباً فاست برينت الساحلين، أرسل هذا الطلب.",
+    whatsappAttachment: "سأرفق الملف في هذه المحادثة.",
+    whatsappReady: "رسالتكم جاهزة للإرسال عبر واتساب.",
+    whatsappOpen: "فتح واتساب",
     whatsappConsent: "أوافق على تلقي تحديثات هذا الطلب عبر واتساب. يمكنني سحب موافقتي بالتواصل مع الورشة.",
   },
   en: {
@@ -104,6 +128,18 @@ const copy = {
     missingFile: "Add your print-ready file to place an order.",
     required: "Required",
     language: "Language",
+    product: "Product",
+    fileLabel: "File",
+    notes: "Request details (optional)",
+    channel: "How to send",
+    team: "Send to the Fast Print team",
+    teamDescription: "Your request will be saved in the team workspace for follow-up.",
+    whatsapp: "Continue on WhatsApp",
+    whatsappDescription: "A prefilled message will open. You can attach your file in the conversation.",
+    whatsappGreeting: "Hello Fast Print Sahline, I would like to send this request.",
+    whatsappAttachment: "I will attach the file in this conversation.",
+    whatsappReady: "Your WhatsApp message is ready.",
+    whatsappOpen: "Open WhatsApp",
     whatsappConsent: "I agree to receive WhatsApp updates about this request or order. I can withdraw my consent by contacting the workshop.",
   },
 } satisfies Record<Locale, Record<string, string>>;
@@ -120,10 +156,12 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [options, setOptions] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(100);
   const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
+  const [submissionChannel, setSubmissionChannel] = useState<"team" | "whatsapp">("team");
   const [price, setPrice] = useState<PriceCheck | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [whatsAppUrl, setWhatsAppUrl] = useState("");
   const text = copy[locale];
 
   function changeLocale(nextLocale: Locale) {
@@ -188,8 +226,39 @@ export default function ProductPage({ params }: ProductPageProps) {
       locale,
       whatsapp_opt_in: form.get("whatsapp_opt_in") === "on",
     };
+    const requestNotes = String(form.get("notes") || "").trim() || undefined;
 
     try {
+      if (submissionChannel === "whatsapp") {
+        const variant = product.variants.find((item) => item.id === selectedVariant);
+        const optionLines = product.options.flatMap((option) => {
+          const selected = option.values.find((value) => value.value === options[option.code]);
+          return selected ? [`${localized(option.translations, locale)}: ${localized(selected.labels, locale)}`] : [];
+        });
+        const selectedFile = form.get("print_file");
+        const fileName = selectedFile instanceof File && selectedFile.name ? selectedFile.name : text.whatsappAttachment;
+        const deliveryAddress = String(form.get("delivery_address") || "").trim();
+        const message = [
+          text.whatsappGreeting,
+          `${text.product}: ${localized(product.translations, locale)}`,
+          variant ? `${text.variant}: ${localized(variant.translations, locale)}` : "",
+          ...optionLines,
+          `${text.quantity}: ${quantity}`,
+          `${text.name}: ${customer.full_name}`,
+          `${text.phone}: ${customer.phone}`,
+          customer.email ? `${text.email}: ${customer.email}` : "",
+          `${text.fulfillment}: ${fulfillment === "pickup" ? text.pickup : text.delivery}`,
+          deliveryAddress ? `${text.address}: ${deliveryAddress}` : "",
+          `${text.fileLabel}: ${fileName}`,
+          requestNotes ? `${text.notes}: ${requestNotes}` : "",
+        ].filter(Boolean).join("\n");
+        const url = `https://wa.me/21623267178?text=${encodeURIComponent(message)}`;
+        setWhatsAppUrl(url);
+        setSuccess(text.whatsappReady);
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
+
       const currentPrice = price ?? await checkPrice();
       if (!price) return;
       const selectedFile = form.get("print_file");
@@ -208,8 +277,8 @@ export default function ProductPage({ params }: ProductPageProps) {
             customer,
             file_ids: fileIds,
             fulfillment_method: fulfillment,
-            delivery_address: null,
-            notes: fulfillment === "delivery" ? text.deliveryQuote : null,
+            delivery_address: fulfillment === "delivery" ? String(form.get("delivery_address") || "").trim() : null,
+            notes: [requestNotes, fulfillment === "delivery" ? text.deliveryQuote : null].filter(Boolean).join("\n") || null,
           }),
         });
         setSuccess(`${text.successQuote} ${result.reference}`);
@@ -228,6 +297,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           fulfillment_method: "pickup",
           delivery_address: null,
           payment_method: "cash_on_fulfillment",
+          notes: requestNotes ?? null,
         }),
       });
       setSuccess(`${text.successOrder} ${result.reference}`);
@@ -302,7 +372,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 <label className="form-field"><span>{text.phone}</span><input autoComplete="tel" maxLength={40} minLength={7} name="phone" required type="tel" /></label>
                 <label className="form-field"><span>{text.email}</span><input autoComplete="email" maxLength={254} name="email" type="email" /></label>
                 <label className="whatsapp-consent"><input name="whatsapp_opt_in" type="checkbox" /><span>{text.whatsappConsent}</span></label>
-                <label className="form-field"><span>{text.file}</span><input accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,application/pdf,image/png,image/jpeg,image/tiff" name="print_file" required={price?.status === "priced" && fulfillment === "pickup"} type="file" /></label>
+                <label className="form-field"><span>{text.file}</span><input accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,application/pdf,image/png,image/jpeg,image/tiff" name="print_file" required={submissionChannel === "team" && price?.status === "priced" && fulfillment === "pickup"} type="file" /></label>
                 <fieldset className="fulfillment-field">
                   <legend>{text.fulfillment}</legend>
                   <label><input checked={fulfillment === "pickup"} onChange={() => { setFulfillment("pickup"); setPrice(null); }} type="radio" value="pickup" />{text.pickup}</label>
@@ -311,11 +381,24 @@ export default function ProductPage({ params }: ProductPageProps) {
                 {fulfillment === "delivery" && (
                   <label className="form-field"><span>{text.address}</span><textarea autoComplete="street-address" maxLength={1000} minLength={10} name="delivery_address" required rows={3} /></label>
                 )}
+                <label className="form-field"><span>{text.notes}</span><textarea maxLength={2000} name="notes" rows={3} /></label>
+                <fieldset className="fulfillment-field submission-method">
+                  <legend>{text.channel}</legend>
+                  <label>
+                    <input checked={submissionChannel === "team"} name="submission_channel" onChange={() => { setSubmissionChannel("team"); setWhatsAppUrl(""); setSuccess(""); }} type="radio" value="team" />
+                    <span><strong>{text.team}</strong><small>{text.teamDescription}</small></span>
+                  </label>
+                  <label>
+                    <input checked={submissionChannel === "whatsapp"} name="submission_channel" onChange={() => { setSubmissionChannel("whatsapp"); setWhatsAppUrl(""); setSuccess(""); }} type="radio" value="whatsapp" />
+                    <span><strong>{text.whatsapp}</strong><small>{text.whatsappDescription}</small></span>
+                  </label>
+                </fieldset>
                 <p className="payment-note">{text.payment}</p>
                 {error && <p className="form-error" role="alert">{error}</p>}
                 {success && <p className="form-success" role="status">{success}</p>}
+                {whatsAppUrl && <a className="button button-outline whatsapp-fallback" href={whatsAppUrl} rel="noreferrer" target="_blank">{text.whatsappOpen}<span aria-hidden="true">↗</span></a>}
                 <button className="button button-dark" disabled={busy || Boolean(success)} type="submit">
-                  {busy ? "…" : !price ? text.checkPrice : price.status === "priced" && fulfillment === "pickup" ? text.order : text.quote}
+                  {submissionChannel === "whatsapp" ? text.whatsapp : busy ? "…" : !price ? text.checkPrice : price.status === "priced" && fulfillment === "pickup" ? text.order : text.quote}
                   <span aria-hidden="true">↗</span>
                 </button>
               </section>

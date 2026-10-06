@@ -15,10 +15,14 @@ const partnerHeadings: Record<Language, string> = {
 
 const copy = {
   fr: {
-    eyebrow: "Votre atelier d’impression à Sahline",
-    headline: "Tout en papier,\npour vos idées.",
+    eyebrow: "Impression numérique · Infographie · Design à Sahline",
+    headline: "Vos idées\nprennent forme.",
     intro:
-      "Du premier croquis au produit fini, nous donnons vie à vos projets avec une impression soignée et des créations personnalisées.",
+      "De la conception graphique à la fabrication, Fast Print Sahline personnalise vos supports : impression, enseignes, décoration événementielle et créations sur mesure.",
+    artCreative: "CRÉATIVITÉ",
+    artPrecision: "PRÉCISION",
+    artInnovation: "INNOVATION",
+    artSignature: "L’art de l’impression",
     explore: "Découvrir nos services",
     contact: "Comment ça se passe ?",
     note: "Un tarif précis dépend du produit et de ses finitions. Demandez un devis pour une combinaison non affichée.",
@@ -65,12 +69,20 @@ const copy = {
     emailLabel: "Écrivez-nous",
     locationLabel: "Atelier",
     contactLocation: "Sahline, Monastir, Tunisie",
+    pricingEyebrow: "Des prix clairs",
+    pricingTitle: "Un tarif adapté à votre projet.",
+    pricingBody: "Les tarifs dépendent du produit, de la quantité et des finitions. Consultez le catalogue pour voir les prix disponibles ou demandez un devis pour vos options.",
+    pricingAction: "Voir les produits",
   },
   ar: {
-    eyebrow: "ورشة الطباعة الخاصة بكم في الساحلين",
-    headline: "أفكاركم\nعلى الورق.",
+    eyebrow: "الطباعة الرقمية · التصميم الجرافيكي · فاست برينت الساحلين",
+    headline: "نحوّل أفكاركم\nإلى واقع.",
     intro:
-      "من الفكرة الأولى إلى المنتج النهائي، نساعدكم على إنجاز مشاريعكم بطباعة متقنة وتصاميم مخصّصة.",
+      "من التصميم الجرافيكي إلى التصنيع، نخصّص مطبوعاتكم ولافتاتكم وديكورات مناسباتكم ومنتجاتكم حسب الطلب.",
+    artCreative: "إبداع",
+    artPrecision: "دقّة",
+    artInnovation: "ابتكار",
+    artSignature: "فن الطباعة",
     explore: "اكتشفوا خدماتنا",
     contact: "كيف تتم العملية؟",
     note: "يتحدد السعر حسب المنتج وخيارات التشطيب. اطلبوا عرض سعر للخيارات غير المتاحة.",
@@ -116,12 +128,20 @@ const copy = {
     emailLabel: "راسلونا",
     locationLabel: "الورشة",
     contactLocation: "الساحلين، المنستير، تونس",
+    pricingEyebrow: "أسعار واضحة",
+    pricingTitle: "سعر يناسب مشروعكم.",
+    pricingBody: "تختلف الأسعار حسب المنتج والكمية والتشطيبات. تصفحوا الكتالوج للاطلاع على الأسعار المتاحة أو اطلبوا عرض سعر للخيارات الخاصة.",
+    pricingAction: "تصفحوا المنتجات",
   },
   en: {
-    eyebrow: "Your print studio in Sahline",
-    headline: "Print your ideas.\nMake them yours.",
+    eyebrow: "Digital printing · Graphic design · Sahline",
+    headline: "Ideas,\nmade visible.",
     intro:
-      "From your first sketch to the finished product, we bring your projects to life with careful printing and personal touches.",
+      "From graphic design to production, Fast Print Sahline personalises your print, signs, event decor and made-to-order creations.",
+    artCreative: "CREATIVITY",
+    artPrecision: "PRECISION",
+    artInnovation: "INNOVATION",
+    artSignature: "The art of printing",
     explore: "Explore our services",
     contact: "How does it work?",
     note: "Final pricing depends on the product and finishing options. Request a quote for options not listed.",
@@ -168,12 +188,35 @@ const copy = {
     emailLabel: "Email us",
     locationLabel: "Workshop",
     contactLocation: "Sahline, Monastir, Tunisia",
+    pricingEyebrow: "Clear pricing",
+    pricingTitle: "Pricing that fits your project.",
+    pricingBody: "Prices depend on the product, quantity and finishes. Browse the catalogue for available prices or request a quote for custom options.",
+    pricingAction: "Browse products",
   },
 } as const;
+
+const aboutCopy: Record<Language, { eyebrow: string; title: string; body: string }> = {
+  fr: {
+    eyebrow: "À propos de Fast Print Sahline",
+    title: "Impression, design et créations sur mesure.",
+    body: "À Sahline, Fast Print Sahline réunit impression numérique, conception graphique et fabrication personnalisée : supports imprimés, enseignes, décoration événementielle et objets créés à votre image. Parcourez le catalogue ou échangez avec notre équipe pour préparer votre projet.",
+  },
+  ar: {
+    eyebrow: "من نحن · Fast Print Sahline",
+    title: "طباعة وتصميم وإبداعات حسب الطلب.",
+    body: "تجمع Fast Print Sahline في الساحلين بين الطباعة الرقمية والتصميم الجرافيكي والتصنيع المخصّص: المطبوعات واللافتات وديكورات المناسبات والمنتجات المصمّمة حسب هويتكم. تصفحوا الكتالوج أو تواصلوا مع فريقنا لتحضير مشروعكم.",
+  },
+  en: {
+    eyebrow: "About Fast Print Sahline",
+    title: "Printing, design and made-to-order creations.",
+    body: "Based in Sahline, Fast Print Sahline brings together digital printing, graphic design and custom production: printed materials, signs, event decor and products made to reflect your identity. Browse the catalogue or talk with our team about your project.",
+  },
+};
 
 export default function Home() {
   const [language, setLanguage] = useState<Language>("fr");
   const text = copy[language];
+  const about = aboutCopy[language];
 
   return (
     <main dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
@@ -192,19 +235,21 @@ export default function Home() {
           </div>
           <p className="hero-note">{text.note}</p>
         </div>
-        <div className="hero-art" aria-label="Supports imprimés Fast Print">
-          <div className="art-paper paper-back"><span>IDEAS<br />IN PRINT</span></div>
-          <div className="art-paper paper-front">
-            <span className="art-sun" />
-            <span className="art-shape" />
-            <span className="art-lines">MAKE<br />IT<br />YOURS</span>
-            <span className="art-caption">FAST PRINT · SAHLINE</span>
+        <div
+          className="hero-art"
+          role="img"
+          aria-label={`${text.artCreative}, ${text.artPrecision}, ${text.artInnovation} — ${text.artSignature}`}
+        >
+          <span className="hero-art-glow hero-art-glow-one" aria-hidden="true" />
+          <span className="hero-art-glow hero-art-glow-two" aria-hidden="true" />
+          <div className="hero-art-words" aria-hidden="true">
+            <span className="hero-art-line hero-art-line-one">{text.artCreative}</span>
+            <span className="hero-art-line hero-art-line-two">{text.artPrecision}</span>
+            <span className="hero-art-line hero-art-line-three">{text.artInnovation}</span>
           </div>
-          <span className="art-orbit orbit-one" />
-          <span className="art-orbit orbit-two" />
-          <span className="art-spark">✳</span>
-          <span className="art-dot" />
-          <span className="art-label">PRINT<br />YOUR<br />IDEA</span>
+          <span className="hero-art-signature" aria-hidden="true">
+            <span className="hero-art-quote">«</span>{text.artSignature}<span className="hero-art-quote">»</span>
+          </span>
         </div>
         <div className="hero-bottom">
           <span>01 — 07</span><span className="hero-bottom-line" /><span>{text.location}</span>
@@ -271,6 +316,24 @@ export default function Home() {
       </section>
 
       <ServiceOrbit locale={language} />
+
+      <section className="about-section section-wrap" id="about-us">
+        <p className="eyebrow"><span />{about.eyebrow}</p>
+        <h2>{about.title}</h2>
+        <p>{about.body}</p>
+        <a className="button button-dark" href={`/services?lang=${language}`}>{text.explore}<span aria-hidden="true">↗</span></a>
+      </section>
+
+      <section className="pricing-section section-wrap" id="tarifs">
+        <div>
+          <p className="eyebrow"><span />{text.pricingEyebrow}</p>
+          <h2>{text.pricingTitle}</h2>
+          <p>{text.pricingBody}</p>
+        </div>
+        <a className="button button-dark" href={`/catalogue?lang=${language}`}>
+          {text.pricingAction}<span aria-hidden="true">↗</span>
+        </a>
+      </section>
 
       <section className="faq section-wrap" id="faq">
         <div className="section-heading">

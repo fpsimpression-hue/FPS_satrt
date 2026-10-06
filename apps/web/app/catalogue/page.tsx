@@ -20,10 +20,15 @@ const copy = {
   fr: {
     eyebrow: "Catalogue Fast Print",
     title: "Choisissez votre idée.",
-    intro: "Parcourez les produits personnalisables. Chaque option est détaillée avant votre demande.",
+    intro: "Parcourez les produits, comparez leurs visuels et composez votre projet selon le format et les finitions souhaités.",
     all: "Tout voir",
     requestQuote: "Prix selon les options",
     details: "Voir le produit",
+    paletteEyebrow: "Inspiration couleur",
+    paletteTitle: "Des palettes pour donner le ton.",
+    paletteBody: "Quelques associations d’inspiration. Les teintes disponibles dépendent du support et des finitions.",
+    paletteNames: "Nature|Solaire|Océan|Douceur",
+    color: "Couleur",
     loading: "Chargement du catalogue…",
     error: "Le catalogue est momentanément indisponible.",
     retry: "Réessayer",
@@ -32,10 +37,15 @@ const copy = {
   ar: {
     eyebrow: "كتالوج فاست برينت",
     title: "اختاروا فكرتكم.",
-    intro: "تصفّحوا المنتجات المخصّصة. كل الخيارات موضّحة قبل تقديم الطلب.",
+    intro: "تصفّحوا المنتجات والصور واختاروا المقاس والتشطيبات المناسبة لمشروعكم.",
     all: "عرض الكل",
     requestQuote: "السعر حسب الخيارات",
     details: "عرض المنتج",
+    paletteEyebrow: "إلهام بالألوان",
+    paletteTitle: "ألوان تمنح مشروعكم طابعه.",
+    paletteBody: "مجموعات ألوان للإلهام. تعتمد الألوان المتاحة على المنتج والتشطيبات.",
+    paletteNames: "طبيعة|إشراق|محيط|نعومة",
+    color: "اللون",
     loading: "جارٍ تحميل الكتالوج…",
     error: "الكتالوج غير متاح حالياً.",
     retry: "إعادة المحاولة",
@@ -44,16 +54,28 @@ const copy = {
   en: {
     eyebrow: "Fast Print catalogue",
     title: "Start with an idea.",
-    intro: "Explore customisable products. Options are shown before you request a quote or order.",
+    intro: "Compare products and image sets, then shape your project with the right size and finish.",
     all: "View all",
     requestQuote: "Price depends on options",
     details: "View product",
+    paletteEyebrow: "Colour inspiration",
+    paletteTitle: "Palettes to set the tone.",
+    paletteBody: "A few colour combinations for inspiration. Available colours depend on the product and finish.",
+    paletteNames: "Nature|Sunshine|Ocean|Soft tones",
+    color: "Colour",
     loading: "Loading the catalogue…",
     error: "The catalogue is temporarily unavailable.",
     retry: "Try again",
     language: "Language",
   },
 } satisfies Record<Locale, Record<string, string>>;
+
+const palettes = [
+  ["#21463B", "#A7BBA0", "#E2B67B", "#F4EEDF"],
+  ["#F05A00", "#F4BF3D", "#252525", "#FFF5DF"],
+  ["#244F73", "#45A9AA", "#D7E7E0", "#F5D78E"],
+  ["#AD6D72", "#DDAEB0", "#D3C8E2", "#F5EBDD"],
+];
 
 export default function CataloguePage() {
   const [locale, setLocale] = useState<Locale>("fr");
@@ -129,6 +151,27 @@ export default function CataloguePage() {
           </button>
         ))}
       </nav>
+      <section className="colour-palettes section-wrap" aria-labelledby="palette-title">
+        <div className="palette-heading">
+          <div>
+            <p className="eyebrow"><span />{text.paletteEyebrow}</p>
+            <h2 id="palette-title">{text.paletteTitle}</h2>
+          </div>
+          <p>{text.paletteBody}</p>
+        </div>
+        <div className="palette-grid">
+          {text.paletteNames.split("|").map((name, index) => (
+            <article className="palette-card" key={name}>
+              <div className="palette-swatches" aria-label={`${text.color} ${name}`}>
+                {palettes[index].map((color) => (
+                  <span aria-hidden="true" key={color} style={{ backgroundColor: color }} />
+                ))}
+              </div>
+              <strong>{name}</strong>
+            </article>
+          ))}
+        </div>
+      </section>
       {loading && <p className="catalogue-message" role="status">{text.loading}</p>}
       {error && (
         <div className="catalogue-message catalogue-error" role="alert">
@@ -138,24 +181,34 @@ export default function CataloguePage() {
       {!loading && !error && (
         <section className="catalogue-grid" aria-label={text.title}>
           {visibleProducts.map((product, index) => {
-            const image = product.images.find((item) => item.is_primary) ?? product.images[0];
+            const images = [...product.images]
+              .sort((left, right) => Number(right.is_primary) - Number(left.is_primary) || left.sort_order - right.sort_order)
+              .slice(0, 3);
             return (
               <article className={`catalogue-card catalogue-card-${(index % 6) + 1}`} key={product.id}>
                 <div className="catalogue-card-top">
                   <span>{localized(product.category.translations, locale)}</span>
                   <span aria-hidden="true">0{index + 1}</span>
                 </div>
-                {image && (
-                  <Image
-                    alt={image.alt_texts[locale] || localized(product.translations, locale)}
-                    className="catalogue-product-image"
-                    height={360}
-                    loading="lazy"
-                    src={assetUrl(image.url)}
-                    unoptimized
-                    width={640}
-                  />
-                )}
+                <div className={`catalogue-image-set image-count-${images.length || 0}`}>
+                  {images.length > 0 ? images.map((image, imageIndex) => (
+                    <Image
+                      alt={image.alt_texts[locale] || localized(product.translations, locale)}
+                      className={`catalogue-set-image catalogue-set-image-${imageIndex + 1}`}
+                      height={440}
+                      key={image.id}
+                      loading="lazy"
+                      src={assetUrl(image.url)}
+                      unoptimized
+                      width={680}
+                    />
+                  )) : (
+                    <div className="catalogue-image-placeholder" aria-hidden="true">
+                      <span>FAST PRINT</span><strong>{localized(product.category.translations, locale)}</strong>
+                    </div>
+                  )}
+                  {product.images.length > 3 && <span className="catalogue-image-count">+{product.images.length - 3}</span>}
+                </div>
                 <div className="catalogue-card-bottom">
                   <h2>{localized(product.translations, locale)}</h2>
                   <p>{localized(product.descriptions, locale)}</p>
