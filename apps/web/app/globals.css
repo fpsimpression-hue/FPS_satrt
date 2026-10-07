@@ -1172,7 +1172,9 @@ a.contact-card:hover { transform: translateY(-4px); border-color: rgba(240, 90, 
 .testimonial-card blockquote { margin: 0; font-size: 15px; line-height: 1.8; }
 .testimonial-card figcaption { display: grid; gap: 4px; margin-top: 24px; font-size: 12px; }
 .testimonial-card figcaption span { color: var(--muted); }
-
+.home-testimonials { padding-block: 72px; background: var(--paper); }
+.home-testimonials .testimonials-grid { margin-top: 24px; }
+.home-testimonials .testimonial-card { box-shadow: 0 8px 28px rgba(39,28,20,.045); }
 .shop-page { background: var(--paper); }
 .shop-intro, .product-heading { padding-top: clamp(54px, 8vw, 88px); }
 .shop-intro h1, .product-heading h1 { letter-spacing: -.065em; }

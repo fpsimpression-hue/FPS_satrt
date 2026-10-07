@@ -60,16 +60,20 @@ const copy = {
       ["06", "Trophées & médailles", "Célébrez vos événements avec des créations sur mesure."],
       ["07", "Papiers à en-tête", "Enveloppes, factures, carnets, bons et tickets personnalisés."],
     ],
-    promiseEyebrow: "L’impression, en toute confiance",
-    promiseTitle: "Un vrai regard sur chaque création.",
-    promiseBody:
-      "Votre fichier est vérifié par notre équipe avant le lancement en production. Une question ou un tarif à confirmer ? Nous échangeons avec vous avant de démarrer.",
+    processEyebrow: "L’impression, en toute confiance",
+    processTitle: "Votre commande, étape par étape.",
+    processIntro: "Préparez votre projet en quatre étapes simples avec notre équipe.",
     steps: [
-      ["01", "Choisissez", "Parcourez les produits et précisez vos options."],
-      ["02", "Envoyez", "Transmettez votre fichier prêt à imprimer."],
-      ["03", "Nous vérifions", "Notre équipe contrôle votre fichier avant production."],
-      ["04", "Récupérez", "Choisissez le retrait ou la livraison."],
+      ["01", "Choisissez votre produit", "Sélectionnez le support, le format, la quantité et les finitions."],
+      ["02", "Envoyez votre fichier", "Transmettez votre visuel prêt à imprimer ou contactez-nous pour être accompagné."],
+      ["03", "Confirmez votre commande", "Nous vérifions votre fichier et confirmons le prix ou le devis avant production."],
+      ["04", "Récupérez votre commande", "Choisissez le retrait à l’atelier ou la livraison."],
     ],
+    testimonialsEyebrow: "La parole à nos clients",
+    testimonialsTitle: "Ce que nos clients disent.",
+    testimonialsIntro: "Les témoignages de nos clients seront publiés ici avec leur accord.",
+    testimonialsPlaceholder: "Témoignage à compléter",
+    testimonialAttribution: "Nom du client à compléter",
     footer: "Impression soignée. Idées sans limites.",
     admin: "Espace équipe",
     location: "Sahline, Tunisie",
@@ -119,16 +123,20 @@ const copy = {
       ["06", "كؤوس وميداليات", "احتفلوا بمناسباتكم بتصاميم حسب الطلب."],
       ["07", "مطبوعات رسمية", "مغلفات وفواتير ودفاتر ووصولات مخصّصة."],
     ],
-    promiseEyebrow: "طباعة بكل ثقة",
-    promiseTitle: "كل تصميم يحظى بعناية حقيقية.",
-    promiseBody:
-      "يراجع فريقنا ملفكم قبل بدء الإنتاج. إذا كان لديكم سؤال أو سعر يحتاج إلى تأكيد، نتواصل معكم أولاً.",
+    processEyebrow: "الطباعة بكل ثقة",
+    processTitle: "طلبكم، خطوة بخطوة.",
+    processIntro: "حضّروا مشروعكم في أربع خطوات بسيطة مع فريقنا.",
     steps: [
-      ["01", "اختاروا", "تصفّحوا المنتجات وحدّدوا الخيارات."],
-      ["02", "أرسلوا", "أرسلوا ملفكم الجاهز للطباعة."],
-      ["03", "نراجع", "يتحقق فريقنا من الملف قبل الإنتاج."],
-      ["04", "استلموا", "اختاروا الاستلام أو التوصيل."],
+      ["01", "اختاروا المنتج", "حدّدوا نوع المطبوع والمقاس والكمية والتشطيبات."],
+      ["02", "أرسلوا الملف", "أرسلوا التصميم الجاهز للطباعة أو تواصلوا معنا للمساعدة."],
+      ["03", "أكّدوا طلبكم", "نراجع الملف ونؤكد السعر أو عرض السعر قبل الإنتاج."],
+      ["04", "استلموا طلبكم", "اختاروا الاستلام من الورشة أو التوصيل."],
     ],
+    testimonialsEyebrow: "آراء عملائنا",
+    testimonialsTitle: "ماذا يقول عملاؤنا؟",
+    testimonialsIntro: "ستُنشر آراء عملائنا هنا بعد الحصول على موافقتهم.",
+    testimonialsPlaceholder: "شهادة عميل قيد الإعداد",
+    testimonialAttribution: "اسم العميل قيد الإعداد",
     footer: "طباعة متقنة. أفكار بلا حدود.",
     admin: "مساحة الفريق",
     location: "الساحلين، تونس",
@@ -179,16 +187,20 @@ const copy = {
       ["06", "Trophies & medals", "Celebrate your events with made-to-order designs."],
       ["07", "Business stationery", "Custom letterheads, envelopes, invoices and tickets."],
     ],
-    promiseEyebrow: "Print with confidence",
-    promiseTitle: "A real person checks every design.",
-    promiseBody:
-      "Our team reviews your file before production begins. Need a confirmed price or have a question? We'll check with you first.",
+    processEyebrow: "Print with confidence",
+    processTitle: "Your order, step by step.",
+    processIntro: "Get your project ready in four simple steps with our team.",
     steps: [
-      ["01", "Choose", "Browse products and select your options."],
-      ["02", "Send", "Upload your print-ready file."],
-      ["03", "We review", "Our team checks your file before production."],
-      ["04", "Collect", "Choose collection or delivery."],
+      ["01", "Choose your product", "Select the print item, size, quantity and finishes."],
+      ["02", "Send your file", "Share your print-ready artwork or contact us for help."],
+      ["03", "Confirm your order", "We check your file and confirm the price or quote before production."],
+      ["04", "Collect your order", "Choose workshop collection or delivery."],
     ],
+    testimonialsEyebrow: "What our clients say",
+    testimonialsTitle: "What our clients say.",
+    testimonialsIntro: "Client testimonials will be published here with their permission.",
+    testimonialsPlaceholder: "Testimonial to be added",
+    testimonialAttribution: "Client name to be added",
     footer: "Thoughtful printing. Ideas without limits.",
     admin: "Team workspace",
     location: "Sahline, Tunisia",
@@ -345,12 +357,12 @@ export default function Home() {
         </a>
       </section>
 
-      <section className="quality">
+      <section aria-labelledby="home-process-title" className="quality">
         <div className="quality-inner">
           <div className="quality-copy">
-            <p className="eyebrow"><span />{text.promiseEyebrow}</p>
-            <h2>{text.promiseTitle}</h2>
-            <p>{text.promiseBody}</p>
+            <p className="eyebrow"><span />{text.processEyebrow}</p>
+            <h2 id="home-process-title">{text.processTitle}</h2>
+            <p>{text.processIntro}</p>
           </div>
           <div className="process-list" id="how-it-works">
             {text.steps.map(([number, title, description]) => (
@@ -361,6 +373,24 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="home-testimonials-title" className="home-testimonials section-wrap">
+        <div className="showcase-heading">
+          <div>
+            <p className="eyebrow"><span />{text.testimonialsEyebrow}</p>
+            <h2 id="home-testimonials-title">{text.testimonialsTitle}</h2>
+          </div>
+          <p>{text.testimonialsIntro}</p>
+        </div>
+        <div className="testimonials-grid">
+          {[1, 2, 3].map((index) => (
+            <figure className="testimonial-card" key={index}>
+              <blockquote>“{text.testimonialsPlaceholder}”</blockquote>
+              <figcaption><strong>{text.testimonialAttribution}</strong></figcaption>
+            </figure>
+          ))}
         </div>
       </section>
 
