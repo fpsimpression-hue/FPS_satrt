@@ -11,11 +11,10 @@ import {
   assetUrl,
   getLocale,
   localized,
-  type Category,
   type Locale,
   type Product,
 } from "@/lib/api";
-import { localCatalogueCategories, localCatalogueProducts } from "@/lib/local-catalog";
+import { localCatalogueProducts } from "@/lib/local-catalog";
 import { portfolioCategories } from "@/lib/portfolio";
 
 const copy = {
@@ -28,14 +27,8 @@ const copy = {
     portfolioBody: "Des exemples concrets de nos impressions et créations, classés pour trouver l’inspiration.",
     viewCategory: "Voir les réalisations",
     photos: "photos",
-    all: "Tout voir",
     requestQuote: "Prix selon les options",
     details: "Voir le produit",
-    paletteEyebrow: "Inspiration couleur",
-    paletteTitle: "Des palettes pour donner le ton.",
-    paletteBody: "Quelques associations d’inspiration. Les teintes disponibles dépendent du support et des finitions.",
-    paletteNames: "Nature|Solaire|Océan|Douceur",
-    color: "Couleur",
     loading: "Chargement du catalogue…",
     error: "Le catalogue est momentanément indisponible.",
     retry: "Réessayer",
@@ -50,14 +43,8 @@ const copy = {
     portfolioBody: "أمثلة حقيقية من مطبوعاتنا وتصاميمنا، مرتبة لتجدوا الإلهام بسهولة.",
     viewCategory: "عرض الأعمال",
     photos: "صور",
-    all: "عرض الكل",
     requestQuote: "السعر حسب الخيارات",
     details: "عرض المنتج",
-    paletteEyebrow: "إلهام بالألوان",
-    paletteTitle: "ألوان تمنح مشروعكم طابعه.",
-    paletteBody: "مجموعات ألوان للإلهام. تعتمد الألوان المتاحة على المنتج والتشطيبات.",
-    paletteNames: "طبيعة|إشراق|محيط|نعومة",
-    color: "اللون",
     loading: "جارٍ تحميل الكتالوج…",
     error: "الكتالوج غير متاح حالياً.",
     retry: "إعادة المحاولة",
@@ -72,14 +59,8 @@ const copy = {
     portfolioBody: "Real examples of our printing and custom work, organised to help you find inspiration.",
     viewCategory: "View projects",
     photos: "photos",
-    all: "View all",
     requestQuote: "Price depends on options",
     details: "View product",
-    paletteEyebrow: "Colour inspiration",
-    paletteTitle: "Palettes to set the tone.",
-    paletteBody: "A few colour combinations for inspiration. Available colours depend on the product and finish.",
-    paletteNames: "Nature|Sunshine|Ocean|Soft tones",
-    color: "Colour",
     loading: "Loading the catalogue…",
     error: "The catalogue is temporarily unavailable.",
     retry: "Try again",
@@ -87,18 +68,9 @@ const copy = {
   },
 } satisfies Record<Locale, Record<string, string>>;
 
-const palettes = [
-  ["#21463B", "#A7BBA0", "#E2B67B", "#F4EEDF"],
-  ["#F05A00", "#F4BF3D", "#252525", "#FFF5DF"],
-  ["#244F73", "#45A9AA", "#D7E7E0", "#F5D78E"],
-  ["#AD6D72", "#DDAEB0", "#D3C8E2", "#F5EBDD"],
-];
-
 export default function CataloguePage() {
   const [locale, setLocale] = useState<Locale>("fr");
-  const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [categoryFilter, setCategoryFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
@@ -120,18 +92,13 @@ export default function CataloguePage() {
     setLoading(true);
     setError("");
 
-    Promise.all([
-      apiRequest<Category[]>("/catalog/categories"),
-      apiRequest<Product[]>("/catalog/products"),
-    ])
-      .then(([categoryResult, productResult]) => {
+    apiRequest<Product[]>("/catalog/products")
+      .then((productResult) => {
         if (cancelled) return;
-        setCategories(categoryResult);
         setProducts(productResult);
       })
       .catch(() => {
         if (cancelled) return;
-        setCategories(localCatalogueCategories);
         setProducts(localCatalogueProducts);
       })
       .finally(() => {
@@ -142,10 +109,6 @@ export default function CataloguePage() {
       cancelled = true;
     };
   }, [refresh, text.error]);
-
-  const visibleProducts = categoryFilter
-    ? products.filter((product) => product.category.slug === categoryFilter)
-    : products;
 
   return (
     <main className="shop-page" dir={locale === "ar" ? "rtl" : "ltr"} lang={locale}>
@@ -190,42 +153,6 @@ export default function CataloguePage() {
           ))}
         </div>
       </section>
-      <nav className="catalogue-filters" aria-label={text.eyebrow}>
-        <button className={!categoryFilter ? "filter-chip active" : "filter-chip"} onClick={() => setCategoryFilter("")} type="button">
-          {text.all}
-        </button>
-        {categories.map((category) => (
-          <button
-            className={categoryFilter === category.slug ? "filter-chip active" : "filter-chip"}
-            key={category.id}
-            onClick={() => setCategoryFilter(category.slug)}
-            type="button"
-          >
-            {localized(category.translations, locale)}
-          </button>
-        ))}
-      </nav>
-      <section className="colour-palettes section-wrap" aria-labelledby="palette-title">
-        <div className="palette-heading">
-          <div>
-            <p className="eyebrow"><span />{text.paletteEyebrow}</p>
-            <h2 id="palette-title">{text.paletteTitle}</h2>
-          </div>
-          <p>{text.paletteBody}</p>
-        </div>
-        <div className="palette-grid">
-          {text.paletteNames.split("|").map((name, index) => (
-            <article className="palette-card" key={name}>
-              <div className="palette-swatches" aria-label={`${text.color} ${name}`}>
-                {palettes[index].map((color) => (
-                  <span aria-hidden="true" key={color} style={{ backgroundColor: color }} />
-                ))}
-              </div>
-              <strong>{name}</strong>
-            </article>
-          ))}
-        </div>
-      </section>
       {loading && <p className="catalogue-message" role="status">{text.loading}</p>}
       {error && (
         <div className="catalogue-message catalogue-error" role="alert">
@@ -234,12 +161,12 @@ export default function CataloguePage() {
       )}
       {!loading && !error && (
         <section className="catalogue-grid" aria-label={text.title}>
-          {visibleProducts.map((product, index) => {
+          {products.map((product, index) => {
             const images = [...product.images]
               .sort((left, right) => Number(right.is_primary) - Number(left.is_primary) || left.sort_order - right.sort_order)
               .slice(0, 3);
             return (
-              <article className={`catalogue-card catalogue-card-${(index % 6) + 1}`} key={product.id}>
+              <article className={`catalogue-card catalogue-card-${(index % 6) + 1}${index === 0 ? " catalogue-card-featured" : ""}`} key={product.id}>
                 <div className="catalogue-card-top">
                   <span>{localized(product.category.translations, locale)}</span>
                   <span aria-hidden="true">0{index + 1}</span>

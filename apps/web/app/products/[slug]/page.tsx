@@ -20,7 +20,8 @@ import {
 
 const copy = {
   fr: {
-    back: "← Retour au catalogue",
+    catalogue: "Catalogue",
+    breadcrumb: "Fil d’Ariane",
     loading: "Chargement du produit…",
     error: "Impossible de charger ce produit.",
     variant: "Format",
@@ -61,7 +62,8 @@ const copy = {
     whatsappConsent: "J’accepte de recevoir sur WhatsApp les mises à jour concernant cette demande ou commande. Je peux retirer mon accord en contactant l’atelier.",
   },
   ar: {
-    back: "← العودة إلى الكتالوج",
+    catalogue: "الكتالوج",
+    breadcrumb: "مسار التصفح",
     loading: "جارٍ تحميل المنتج…",
     error: "تعذّر تحميل هذا المنتج.",
     variant: "الحجم",
@@ -102,7 +104,8 @@ const copy = {
     whatsappConsent: "أوافق على تلقي تحديثات هذا الطلب عبر واتساب. يمكنني سحب موافقتي بالتواصل مع الورشة.",
   },
   en: {
-    back: "← Back to catalogue",
+    catalogue: "Catalogue",
+    breadcrumb: "Breadcrumb",
     loading: "Loading product…",
     error: "This product could not be loaded.",
     variant: "Format",
@@ -312,33 +315,47 @@ export default function ProductPage({ params }: ProductPageProps) {
     <main className="shop-page product-page" dir={locale === "ar" ? "rtl" : "ltr"} lang={locale}>
       <SiteHeader locale={locale} onLocaleChange={changeLocale} />
       <div className="product-content">
-        <Link className="back-link" href={`/catalogue?lang=${locale}`}>{text.back}</Link>
         {!product && !error && <p className="catalogue-message" role="status">{text.loading}</p>}
         {error && !product && <p className="catalogue-message catalogue-error" role="alert">{error}</p>}
         {product && (
           <>
-            <section className="product-heading">
-              <p className="eyebrow"><span />{localized(product.category.translations, locale)}</p>
-              <h1>{localized(product.translations, locale)}</h1>
-              <p>{localized(product.descriptions, locale)}</p>
-              {product.images.length > 0 && (
-                <div className="product-gallery" aria-label={localized(product.translations, locale)}>
-                  {product.images.map((image) => (
+            <nav className="product-breadcrumb" aria-label={text.breadcrumb}>
+              <Link href={`/catalogue?lang=${locale}`}>{text.catalogue}</Link>
+              <span aria-hidden="true">/</span>
+              <span>{localized(product.category.translations, locale)}</span>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">{localized(product.translations, locale)}</span>
+            </nav>
+            <section className="product-overview">
+              <div className="product-gallery" aria-label={localized(product.translations, locale)}>
+                {product.images.length > 0 ? [...product.images]
+                  .sort((left, right) => Number(right.is_primary) - Number(left.is_primary) || left.sort_order - right.sort_order)
+                  .map((image, index) => (
                     <Image
                       alt={image.alt_texts[locale] || localized(product.translations, locale)}
-                      className={image.is_primary ? "product-gallery-image primary" : "product-gallery-image"}
+                      className={index === 0 ? "product-gallery-image primary" : "product-gallery-image"}
                       height={520}
                       key={image.id}
-                      loading={image.is_primary ? "eager" : "lazy"}
+                      loading={index === 0 ? "eager" : "lazy"}
                       src={assetUrl(image.url)}
                       unoptimized
                       width={900}
                     />
-                  ))}
-                </div>
-              )}
+                  )) : (
+                    <div className="product-gallery-empty">
+                      <span>FAST PRINT</span>
+                      <strong>{localized(product.category.translations, locale)}</strong>
+                    </div>
+                  )}
+              </div>
+              <div className="product-summary">
+                <p className="eyebrow"><span />{localized(product.category.translations, locale)}</p>
+                <h1>{localized(product.translations, locale)}</h1>
+                <p>{localized(product.descriptions, locale)}</p>
+                <a className="button button-orange product-quote-cta" href="#product-form">{text.quote}</a>
+              </div>
             </section>
-            <form className="product-form" onSubmit={submit}>
+            <form className="product-form" id="product-form" onSubmit={submit}>
               <section className="product-config">
                 <h2>{text.variant}</h2>
                 <label className="form-field">

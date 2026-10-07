@@ -4,7 +4,7 @@ import Image from "next/image";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ServiceOrbit } from "@/components/service-orbit";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Language = "fr" | "ar" | "en";
 type Partner = {
@@ -51,15 +51,7 @@ const copy = {
     categoriesTitle: "Tout commence par une idée.",
     categoriesIntro:
       "Des supports du quotidien aux créations qui vous ressemblent, découvrez les possibilités.",
-    categories: [
-      ["01", "Cartes de visite", "Une première impression soignée, à l’image de votre activité."],
-      ["02", "Flyers & dépliants", "Faites circuler vos idées avec des formats qui attirent l’œil."],
-      ["03", "Menus restaurant", "Des menus élégants, pensés pour mettre vos plats en valeur."],
-      ["04", "Blocs-notes & carnets", "Des carnets personnalisés pour vos notes et votre marque."],
-      ["05", "Stylos personnalisés", "Des objets utiles qui font voyager votre identité."],
-      ["06", "Trophées & médailles", "Célébrez vos événements avec des créations sur mesure."],
-      ["07", "Papiers à en-tête", "Enveloppes, factures, carnets, bons et tickets personnalisés."],
-    ],
+    categoriesVideoLabel: "Vidéo de présentation Fast Print Sahline",
     processEyebrow: "L’impression, en toute confiance",
     processTitle: "Votre commande, étape par étape.",
     processIntro: "Préparez votre projet en quatre étapes simples avec notre équipe.",
@@ -114,15 +106,7 @@ const copy = {
     note: "يتحدد السعر حسب المنتج وخيارات التشطيب. اطلبوا عرض سعر للخيارات غير المتاحة.",
     categoriesTitle: "كل شيء يبدأ بفكرة.",
     categoriesIntro: "من المطبوعات اليومية إلى الإبداعات التي تعبّر عنكم، اكتشفوا الإمكانيات.",
-    categories: [
-      ["01", "بطاقات الزيارة", "بطاقات أنيقة تعكس صورة نشاطكم."],
-      ["02", "مطويات ومنشورات", "أوصلوا أفكاركم بمطبوعات تلفت الانتباه."],
-      ["03", "قوائم المطاعم", "قوائم أنيقة تبرز أطباق مطعمكم."],
-      ["04", "دفاتر ومفكرات", "دفاتر مخصّصة لملاحظاتكم وعلامتكم."],
-      ["05", "أقلام مخصّصة", "أدوات عملية تحمل هويتكم."],
-      ["06", "كؤوس وميداليات", "احتفلوا بمناسباتكم بتصاميم حسب الطلب."],
-      ["07", "مطبوعات رسمية", "مغلفات وفواتير ودفاتر ووصولات مخصّصة."],
-    ],
+    categoriesVideoLabel: "فيديو تعريفي عن Fast Print Sahline",
     processEyebrow: "الطباعة بكل ثقة",
     processTitle: "طلبكم، خطوة بخطوة.",
     processIntro: "حضّروا مشروعكم في أربع خطوات بسيطة مع فريقنا.",
@@ -178,15 +162,7 @@ const copy = {
     categoriesTitle: "Every project starts with an idea.",
     categoriesIntro:
       "From everyday print essentials to one-of-a-kind creations, explore what's possible.",
-    categories: [
-      ["01", "Business cards", "A polished first impression, tailored to your business."],
-      ["02", "Flyers & folded leaflets", "Share your message in formats that stand out."],
-      ["03", "Restaurant menus", "Elegant menus designed to showcase your dishes."],
-      ["04", "Notepads & notebooks", "Custom notebooks for your notes and your brand."],
-      ["05", "Custom pens", "Useful promotional items that carry your identity."],
-      ["06", "Trophies & medals", "Celebrate your events with made-to-order designs."],
-      ["07", "Business stationery", "Custom letterheads, envelopes, invoices and tickets."],
-    ],
+    categoriesVideoLabel: "Fast Print Sahline introduction video",
     processEyebrow: "Print with confidence",
     processTitle: "Your order, step by step.",
     processIntro: "Get your project ready in four simple steps with our team.",
@@ -249,8 +225,31 @@ const aboutCopy: Record<Language, { eyebrow: string; title: string; body: string
 
 export default function Home() {
   const [language, setLanguage] = useState<Language>("fr");
+  const categoryVideoRef = useRef<HTMLVideoElement>(null);
   const text = copy[language];
   const about = aboutCopy[language];
+
+  useEffect(() => {
+    const video = categoryVideoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.muted = true;
+          void video.play().catch((error: unknown) => {
+            console.warn("La lecture automatique de la vidéo a été bloquée.", error);
+          });
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.35 },
+    );
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <main dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
@@ -265,7 +264,7 @@ export default function Home() {
             <a className="button button-dark" href={`/catalogue?lang=${language}`}>
               {text.explore}<span aria-hidden="true">↗</span>
             </a>
-            <a className="text-link" href="#how-it-works">{text.contact}<span aria-hidden="true">→</span></a>
+            <a className="text-link" href="#service-orbit">{text.contact}<span aria-hidden="true">→</span></a>
           </div>
           <p className="hero-note">{text.note}</p>
         </div>
@@ -340,41 +339,27 @@ export default function Home() {
           </div>
           <p>{text.categoriesIntro}</p>
         </div>
-        <div className="category-grid">
-          {text.categories.map(([number, title, description], index) => (
-            <a className={`category-card category-${index + 1}`} href={`/catalogue?lang=${language}`} key={number}>
-              <div className="category-top"><span>{number}</span><span className="category-icon" aria-hidden="true">{["▧", "▤", "▣", "▤", "✎", "♜", "▧"][index]}</span></div>
-              <div>
-                <h3>{title}</h3>
-                <p>{description}</p>
-              </div>
-              <span className="card-arrow" aria-hidden="true">↗</span>
-            </a>
-          ))}
+        <div className="category-video">
+          <video
+            aria-label={text.categoriesVideoLabel}
+            controls
+            muted
+            playsInline
+            preload="metadata"
+            ref={categoryVideoRef}
+          >
+            <source src="/videos/services-showcase.mov" />
+          </video>
         </div>
-        <a className="button button-dark catalogue-cta" href={`/catalogue?lang=${language}`}>
-          {text.explore}<span aria-hidden="true">↗</span>
-        </a>
       </section>
 
-      <section aria-labelledby="home-process-title" className="quality">
-        <div className="quality-inner">
-          <div className="quality-copy">
-            <p className="eyebrow"><span />{text.processEyebrow}</p>
-            <h2 id="home-process-title">{text.processTitle}</h2>
-            <p>{text.processIntro}</p>
-          </div>
-          <div className="process-list" id="how-it-works">
-            {text.steps.map(([number, title, description]) => (
-              <div className="process-step" key={number}>
-                <span className="step-number">{number}</span>
-                <div><h3>{title}</h3><p>{description}</p></div>
-                <span className="step-check" aria-hidden="true">✓</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ServiceOrbit
+        eyebrow={text.processEyebrow}
+        intro={text.processIntro}
+        locale={language}
+        steps={text.steps}
+        title={text.processTitle}
+      />
 
       <section aria-labelledby="home-testimonials-title" className="home-testimonials section-wrap">
         <div className="showcase-heading">
@@ -384,17 +369,32 @@ export default function Home() {
           </div>
           <p>{text.testimonialsIntro}</p>
         </div>
-        <div className="testimonials-grid">
-          {[1, 2, 3].map((index) => (
-            <figure className="testimonial-card" key={index}>
-              <blockquote>“{text.testimonialsPlaceholder}”</blockquote>
-              <figcaption><strong>{text.testimonialAttribution}</strong></figcaption>
-            </figure>
-          ))}
+        <div className="testimonial-marquee">
+          <div className="testimonial-track">
+            {[0, 1].map((copyIndex) => (
+              <div className="testimonial-group" aria-hidden={copyIndex === 1} key={copyIndex}>
+                {[1, 2, 3].map((index) => (
+                  <figure className="testimonial-card" key={index}>
+                    <div className="testimonial-card-top">
+                      <span className="testimonial-quote-mark" aria-hidden="true">”</span>
+                    </div>
+                    <blockquote>{text.testimonialsPlaceholder}</blockquote>
+                    <figcaption>
+                      <span className="testimonial-avatar" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="8" r="3.5" />
+                          <path d="M5.5 20c.5-3.7 2.8-5.5 6.5-5.5s6 1.8 6.5 5.5" />
+                        </svg>
+                      </span>
+                      <strong>{text.testimonialAttribution}</strong>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
-
-      <ServiceOrbit locale={language} />
 
       <section className="about-section section-wrap" id="about-us">
         <p className="eyebrow"><span />{about.eyebrow}</p>
@@ -414,7 +414,7 @@ export default function Home() {
         </a>
       </section>
 
-      <section className="faq section-wrap" id="faq">
+      <section className="faq faq-reference section-wrap" id="faq">
         <div className="section-heading">
           <div>
             <p className="eyebrow"><span />{text.faqEyebrow}</p>

@@ -4,7 +4,7 @@ type SiteFooterProps = { locale?: "fr" | "ar" | "en" };
 
 const labels = {
   fr: {
-    phone: "Appelez-nous", email: "Écrivez-nous", location: "Atelier",
+    phone: "Appelez-nous", email: "Écrivez-nous", location: "Atelier", whatsappContact: "Nous contacter sur WhatsApp",
     project: "Parlons de votre projet", title: "Une idée à imprimer ?",
     body: "Décrivez-nous le support souhaité, la quantité et les finitions envisagées. Nous étudierons votre demande.",
     about: "À propos", links: "Liens utiles", support: "Assistance", contact: "Contact",
@@ -14,7 +14,7 @@ const labels = {
     copyright: "Tous droits réservés.",
   },
   ar: {
-    phone: "اتصلوا بنا", email: "راسلونا", location: "الورشة",
+    phone: "اتصلوا بنا", email: "راسلونا", location: "الورشة", whatsappContact: "تواصلوا معنا عبر واتساب",
     project: "لنتحدث عن مشروعكم", title: "لديكم فكرة للطباعة؟",
     body: "أخبرونا عن المنتج والكمية والتشطيبات المطلوبة لندرس طلبكم.",
     about: "من نحن", links: "روابط مفيدة", support: "المساعدة", contact: "اتصلوا بنا",
@@ -24,7 +24,7 @@ const labels = {
     copyright: "جميع الحقوق محفوظة.",
   },
   en: {
-    phone: "Call us", email: "Email us", location: "Workshop",
+    phone: "Call us", email: "Email us", location: "Workshop", whatsappContact: "Contact us on WhatsApp",
     project: "Tell us about your project", title: "Have an idea to print?",
     body: "Tell us what you need, the quantity and any finishes you have in mind. We will review your request.",
     about: "About Us", links: "Useful Links", support: "Support", contact: "Contact Us",
@@ -60,6 +60,7 @@ export function SiteFooter({ locale = "fr" }: SiteFooterProps) {
   const mapsEmbed = `https://www.google.com/maps?q=${mapsQuery}&output=embed`;
 
   return (
+    <>
     <footer className="site-footer" dir={locale === "ar" ? "rtl" : "ltr"}>
       <section className="contact footer-contact-section section-wrap" id="contact">
         <div className="contact-copy">
@@ -136,5 +137,12 @@ export function SiteFooter({ locale = "fr" }: SiteFooterProps) {
       </div>
       <div className="footer-bottom"><span>© {new Date().getFullYear()} Fast Print Sahline</span><span>{text.copyright}</span></div>
     </footer>
+    <a aria-label={text.whatsappContact} className="whatsapp-float" href="https://wa.me/21623267178" rel="noreferrer" target="_blank" title={text.whatsappContact}>
+      <svg aria-hidden="true" viewBox="0 0 32 32" fill="none">
+        <path d="M26.5 15.5a10.5 10.5 0 0 1-15.55 9.18L5 26l1.38-5.73A10.5 10.5 0 1 1 26.5 15.5Z" />
+        <path d="M11.2 10.3c.3-.68.62-.7 1.02-.71h.87c.28 0 .59.1.77.52l1.1 2.56c.14.34.14.6-.04.86l-.82 1c-.23.26-.3.46-.1.8a9.2 9.2 0 0 0 2.02 2.48 8.8 8.8 0 0 0 2.65 1.63c.33.15.53.12.74-.13l1.07-1.26c.25-.29.5-.35.83-.22l2.46 1.17c.36.17.6.26.69.42.1.17.1.97-.24 1.86-.34.89-1.96 1.74-2.7 1.8-.74.07-1.44.34-4.85-1.08-4.1-1.7-6.72-5.95-6.92-6.23-.2-.28-1.65-2.2-1.65-4.2 0-2 .97-2.98 1.32-3.37Z" />
+      </svg>
+    </a>
+    </>
   );
 }
