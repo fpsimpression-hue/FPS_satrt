@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { apiRequest, assetUrl, getLocale, localized, type Locale, type Product } from "@/lib/api";
+import { localCatalogueProducts } from "@/lib/local-catalog";
 
 const copy = {
   fr: {
@@ -70,7 +71,7 @@ export default function QuotePage() {
         if (!cancelled) setProducts(result);
       })
       .catch(() => {
-        if (!cancelled) setError(true);
+        if (!cancelled) setProducts(localCatalogueProducts);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

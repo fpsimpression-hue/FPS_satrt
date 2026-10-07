@@ -71,6 +71,7 @@ export type CustomerDetails = {
 export const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 export function assetUrl(path: string): string {
+  if (path.startsWith("/portfolio/")) return path;
   return `${apiBaseUrl}${path}`;
 }
 

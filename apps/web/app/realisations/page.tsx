@@ -114,7 +114,7 @@ export default function RealisationsPage() {
 
       <div className="portfolio-groups">
         {visibleCategories.map((category) => (
-          <section aria-labelledby={`portfolio-${category.id}`} className="portfolio-category" key={category.id}>
+          <section aria-labelledby={`portfolio-${category.id}`} className="portfolio-category" id={`portfolio-${category.id}`} key={category.id}>
             <div className="portfolio-category-heading">
               <span className="portfolio-category-number">{category.number}</span>
               <div><p className="eyebrow"><span />{category.photos.length} {text.photos}</p><h2 id={`portfolio-${category.id}`}>{category.title[locale]}</h2></div>

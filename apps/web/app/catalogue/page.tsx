@@ -15,12 +15,19 @@ import {
   type Locale,
   type Product,
 } from "@/lib/api";
+import { localCatalogueCategories, localCatalogueProducts } from "@/lib/local-catalog";
+import { portfolioCategories } from "@/lib/portfolio";
 
 const copy = {
   fr: {
     eyebrow: "Catalogue Fast Print",
     title: "Choisissez votre idée.",
     intro: "Parcourez les produits, comparez leurs visuels et composez votre projet selon le format et les finitions souhaités.",
+    portfolioEyebrow: "Nos réalisations",
+    portfolioTitle: "Explorez par catégorie.",
+    portfolioBody: "Des exemples concrets de nos impressions et créations, classés pour trouver l’inspiration.",
+    viewCategory: "Voir les réalisations",
+    photos: "photos",
     all: "Tout voir",
     requestQuote: "Prix selon les options",
     details: "Voir le produit",
@@ -38,6 +45,11 @@ const copy = {
     eyebrow: "كتالوج فاست برينت",
     title: "اختاروا فكرتكم.",
     intro: "تصفّحوا المنتجات والصور واختاروا المقاس والتشطيبات المناسبة لمشروعكم.",
+    portfolioEyebrow: "أعمالنا",
+    portfolioTitle: "اكتشفوا حسب الفئة.",
+    portfolioBody: "أمثلة حقيقية من مطبوعاتنا وتصاميمنا، مرتبة لتجدوا الإلهام بسهولة.",
+    viewCategory: "عرض الأعمال",
+    photos: "صور",
     all: "عرض الكل",
     requestQuote: "السعر حسب الخيارات",
     details: "عرض المنتج",
@@ -55,6 +67,11 @@ const copy = {
     eyebrow: "Fast Print catalogue",
     title: "Start with an idea.",
     intro: "Compare products and image sets, then shape your project with the right size and finish.",
+    portfolioEyebrow: "Our work",
+    portfolioTitle: "Explore by category.",
+    portfolioBody: "Real examples of our printing and custom work, organised to help you find inspiration.",
+    viewCategory: "View projects",
+    photos: "photos",
     all: "View all",
     requestQuote: "Price depends on options",
     details: "View product",
@@ -113,7 +130,9 @@ export default function CataloguePage() {
         setProducts(productResult);
       })
       .catch(() => {
-        if (!cancelled) setError(text.error);
+        if (cancelled) return;
+        setCategories(localCatalogueCategories);
+        setProducts(localCatalogueProducts);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -135,6 +154,41 @@ export default function CataloguePage() {
         <p className="eyebrow"><span />{text.eyebrow}</p>
         <h1>{text.title}</h1>
         <p>{text.intro}</p>
+      </section>
+      <section className="catalogue-categories section-wrap" aria-labelledby="catalogue-categories-title">
+        <div className="palette-heading">
+          <div>
+            <p className="eyebrow"><span />{text.portfolioEyebrow}</p>
+            <h2 id="catalogue-categories-title">{text.portfolioTitle}</h2>
+          </div>
+          <p>{text.portfolioBody}</p>
+        </div>
+        <div className="catalogue-category-grid">
+          {portfolioCategories.map((category) => (
+            <Link
+              aria-label={`${text.viewCategory} : ${category.title[locale]}`}
+              className="catalogue-category-card"
+              href={`/realisations?lang=${locale}#portfolio-${category.id}`}
+              key={category.id}
+            >
+              <div className="catalogue-category-image">
+                <Image
+                  alt={category.photos[0]?.alt ?? category.title[locale]}
+                  fill
+                  loading="lazy"
+                  sizes="(max-width: 600px) 88vw, (max-width: 850px) 44vw, 22vw"
+                  src={`/portfolio/${category.id}/01.jpg`}
+                />
+                <span className="catalogue-category-number">{category.number}</span>
+                <span aria-hidden="true" className="catalogue-category-arrow">↗</span>
+              </div>
+              <div className="catalogue-category-copy">
+                <h3>{category.title[locale]}</h3>
+                <span>{category.photos.length} {text.photos}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
       <nav className="catalogue-filters" aria-label={text.eyebrow}>
         <button className={!categoryFilter ? "filter-chip active" : "filter-chip"} onClick={() => setCategoryFilter("")} type="button">
