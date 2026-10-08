@@ -1,9 +1,10 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -222,13 +223,24 @@ class QuoteRequest(Base):
             "quoted_amount IS NULL OR quoted_amount >= 0",
             name="ck_quote_request_amount_nonnegative",
         ),
+        CheckConstraint(
+            "(product_id IS NOT NULL AND variant_id IS NOT NULL) OR project_category IS NOT NULL",
+            name="ck_quote_request_subject",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     reference: Mapped[str] = mapped_column(String(20), unique=True, index=True)
     customer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("customers.id", ondelete="RESTRICT"))
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id", ondelete="RESTRICT"))
-    variant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("product_variants.id", ondelete="RESTRICT"))
+    # A quote targets either a catalogue product/variant or a custom project category.
+    product_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("products.id", ondelete="RESTRICT"))
+    variant_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("product_variants.id", ondelete="RESTRICT"))
+    project_category: Mapped[str | None] = mapped_column(String(40))
+    dimensions: Mapped[str | None] = mapped_column(String(200))
+    desired_date: Mapped[date | None] = mapped_column(Date)
+    design_help: Mapped[bool] = mapped_column(
+        default=False, server_default=text("false"), nullable=False
+    )
     product_name: Mapped[str] = mapped_column(String(180), nullable=False)
     variant_name: Mapped[str] = mapped_column(String(180), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -285,8 +297,9 @@ class OrderItem(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"))
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id", ondelete="RESTRICT"))
-    variant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("product_variants.id", ondelete="RESTRICT"))
+    # Empty for custom projects converted from a quote; product_name keeps the label.
+    product_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("products.id", ondelete="RESTRICT"))
+    variant_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("product_variants.id", ondelete="RESTRICT"))
     product_name: Mapped[str] = mapped_column(String(180), nullable=False)
     variant_name: Mapped[str] = mapped_column(String(180), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)

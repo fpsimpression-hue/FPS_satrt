@@ -14,6 +14,7 @@ from app.auth_routes import require_admin, verify_admin_origin
 from app.catalog import validate_options
 from app.database import get_session
 from app.file_storage import store_upload
+from app.order_routes import new_reference
 from app.models import (
     NotificationOutbox,
     Order,
@@ -50,10 +51,50 @@ ORDER_TRANSITIONS: dict[str, set[str]] = {
     "completed": set(),
     "cancelled": set(),
 }
+# Orders the team can still prepare: files may be added and production launched.
+ORDERS_AWAITING_LAUNCH = {"pending_review", "confirmed"}
+ORDER_STATUS_MESSAGES: dict[str, dict[str, str]] = {
+    "confirmed": {
+        "fr": "Votre commande est confirmée.",
+        "ar": "تم تأكيد طلبكم.",
+        "en": "Your order is confirmed.",
+    },
+    "in_production": {
+        "fr": "La production de votre commande a commencé.",
+        "ar": "بدأ إنتاج طلبكم.",
+        "en": "Production of your order has started.",
+    },
+    "ready": {
+        "fr": "Votre commande est prête. Vous pouvez la récupérer à l’atelier.",
+        "ar": "طلبكم جاهز. يمكنكم استلامه من الورشة.",
+        "en": "Your order is ready for collection from the workshop.",
+    },
+    "completed": {
+        "fr": "Votre commande est terminée. Merci pour votre confiance.",
+        "ar": "اكتمل طلبكم. شكراً لثقتكم بنا.",
+        "en": "Your order is complete. Thank you for choosing us.",
+    },
+    "cancelled": {
+        "fr": "Votre commande a été annulée. Contactez l’atelier si vous avez des questions.",
+        "ar": "تم إلغاء طلبكم. تواصلوا مع الورشة لأي استفسار.",
+        "en": "Your order was cancelled. Contact the workshop if you have questions.",
+    },
+}
 
 
 def ensure_admin_origin(request: Request) -> None:
     verify_admin_origin(request)
+
+
+async def queue_order_update(session: AsyncSession, order: Order, status: str) -> None:
+    await queue_whatsapp_update(
+        session,
+        order.customer,
+        event_type=f"order_{status}",
+        reference=order.reference,
+        details=ORDER_STATUS_MESSAGES[status],
+        dedupe_key=f"order:{order.id}:{status}",
+    )
 
 
 @router.get("/overview", response_model=AdminOverviewOut)
@@ -151,8 +192,12 @@ def quote_output(quote: QuoteRequest) -> AdminQuoteOut:
         status=quote.status,
         product_name=quote.product_name,
         variant_name=quote.variant_name,
+        project_category=quote.project_category,
         quantity=quote.quantity,
         selected_options=quote.selected_options,
+        dimensions=quote.dimensions,
+        desired_date=quote.desired_date,
+        design_help=quote.design_help,
         fulfillment_method=quote.fulfillment_method,
         delivery_address=quote.delivery_address,
         notes=quote.notes,
@@ -294,20 +339,22 @@ async def convert_quote_to_order(
                 status_code=409,
                 detail="A print-ready file must be attached before creating an order",
             )
-        product = await session.scalar(
-            select(Product).where(Product.id == quote.product_id, Product.is_active.is_(True))
-        )
-        variant = await session.scalar(
-            select(ProductVariant).where(
-                ProductVariant.id == quote.variant_id,
-                ProductVariant.is_active.is_(True),
+        # Custom projects have no catalogue product to check; the quoted label is kept.
+        if quote.product_id is not None:
+            product = await session.scalar(
+                select(Product).where(Product.id == quote.product_id, Product.is_active.is_(True))
             )
-        )
-        if product is None or variant is None:
-            raise HTTPException(status_code=409, detail="The quoted product is no longer available")
+            variant = await session.scalar(
+                select(ProductVariant).where(
+                    ProductVariant.id == quote.variant_id,
+                    ProductVariant.is_active.is_(True),
+                )
+            )
+            if product is None or variant is None:
+                raise HTTPException(status_code=409, detail="The quoted product is no longer available")
 
         order = Order(
-            reference=f"FP-{uuid.uuid4().hex[:20].upper()}",
+            reference=new_reference("FP"),
             customer=quote.customer,
             fulfillment_method=quote.fulfillment_method,
             delivery_address=quote.delivery_address,
@@ -419,42 +466,86 @@ async def update_order_status(
                 )
         order.status = update.status
         await session.flush()
-        queue_details = {
-            "confirmed": {
-                "fr": "Votre commande est confirmée.",
-                "ar": "تم تأكيد طلبكم.",
-                "en": "Your order is confirmed.",
-            },
-            "in_production": {
-                "fr": "La production de votre commande a commencé.",
-                "ar": "بدأ إنتاج طلبكم.",
-                "en": "Production of your order has started.",
-            },
-            "ready": {
-                "fr": "Votre commande est prête. Vous pouvez la récupérer à l’atelier.",
-                "ar": "طلبكم جاهز. يمكنكم استلامه من الورشة.",
-                "en": "Your order is ready for collection from the workshop.",
-            },
-            "completed": {
-                "fr": "Votre commande est terminée. Merci pour votre confiance.",
-                "ar": "اكتمل طلبكم. شكراً لثقتكم بنا.",
-                "en": "Your order is complete. Thank you for choosing us.",
-            },
-            "cancelled": {
-                "fr": "Votre commande a été annulée. Contactez l’atelier si vous avez des questions.",
-                "ar": "تم إلغاء طلبكم. تواصلوا مع الورشة لأي استفسار.",
-                "en": "Your order was cancelled. Contact the workshop if you have questions.",
-            },
-        }
-        await queue_whatsapp_update(
-            session,
-            order.customer,
-            event_type=f"order_{update.status}",
-            reference=order.reference,
-            details=queue_details[update.status],
-            dedupe_key=f"order:{order.id}:{update.status}",
-        )
+        await queue_order_update(session, order, update.status)
         return order_output(order)
+
+
+@router.post("/orders/{order_id}/start-production", response_model=AdminOrderOut)
+async def start_production(
+    order_id: uuid.UUID,
+    request: Request,
+    session: SessionDep,
+    _: AdminDep,
+) -> AdminOrderOut:
+    """Single team action: the files were checked, so approve them and launch production."""
+    ensure_admin_origin(request)
+    async with session.begin():
+        order = await session.scalar(
+            order_query().where(Order.id == order_id).with_for_update()
+        )
+        if order is None:
+            raise HTTPException(status_code=404, detail="Order not found")
+        if order.status not in ORDERS_AWAITING_LAUNCH:
+            raise HTTPException(
+                status_code=409,
+                detail="Production can only start for an order awaiting launch",
+            )
+        usable_files = [
+            uploaded_file
+            for uploaded_file in order.files
+            if uploaded_file.review_status != "rejected"
+        ]
+        if not usable_files:
+            raise HTTPException(
+                status_code=409,
+                detail="Attach a print-ready file before starting production",
+            )
+        for uploaded_file in usable_files:
+            uploaded_file.review_status = "approved"
+        order.status = "in_production"
+        await session.flush()
+        await queue_order_update(session, order, "in_production")
+        return order_output(order)
+
+
+@router.post("/orders/{order_id}/files", response_model=AdminOrderOut, status_code=201)
+async def attach_order_file(
+    order_id: uuid.UUID,
+    request: Request,
+    session: SessionDep,
+    _: AdminDep,
+    file: Annotated[UploadFile, File()],
+) -> AdminOrderOut:
+    ensure_admin_origin(request)
+    storage_key, original_filename, size_bytes, sha256, content_type = await store_upload(file)
+    storage_path = Path(settings.file_storage_path) / storage_key
+    try:
+        async with session.begin():
+            order = await session.scalar(
+                order_query().where(Order.id == order_id).with_for_update()
+            )
+            if order is None:
+                raise HTTPException(status_code=404, detail="Order not found")
+            if order.status not in ORDERS_AWAITING_LAUNCH:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Files can only be added before production starts",
+                )
+            uploaded_file = UploadedFile(
+                original_filename=original_filename,
+                storage_key=storage_key,
+                content_type=content_type,
+                size_bytes=size_bytes,
+                sha256=sha256,
+                order=order,
+                order_item=order.items[0] if order.items else None,
+            )
+            session.add(uploaded_file)
+            await session.flush()
+    except BaseException:
+        storage_path.unlink(missing_ok=True)
+        raise
+    return order_output(order)
 
 
 @router.get("/prices", response_model=list[AdminPriceTierOut])

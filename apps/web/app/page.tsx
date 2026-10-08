@@ -252,13 +252,19 @@ export default function Home() {
   }, []);
 
   return (
-    <main dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
+    <main className="home-page" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
       <SiteHeader locale={language} onLocaleChange={setLanguage} />
 
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow"><span />{text.eyebrow}</p>
-          <h1>{text.headline}</h1>
+          <h1>
+            {text.headline.split("\n").map((line, index) => (
+              <span className={index === 1 ? "hero-highlight" : undefined} key={line}>
+                {line}
+              </span>
+            ))}
+          </h1>
           <p className="hero-intro">{text.intro}</p>
           <div className="hero-actions">
             <a className="button button-dark" href={`/catalogue?lang=${language}`}>

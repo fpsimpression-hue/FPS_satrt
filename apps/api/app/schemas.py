@@ -1,6 +1,6 @@
 import uuid
 import re
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -146,6 +146,70 @@ class QuoteRequestIn(PriceCheckIn):
         return validate_delivery_address(value)
 
 
+ProjectCategory = Literal[
+    "enseignes",
+    "vehicules",
+    "grand-format",
+    "textile",
+    "objets-cadeaux",
+    "imprimes-papeterie",
+    "decoration-tableaux",
+    "plv-decoupe",
+    "autre",
+]
+
+
+class ProjectQuoteRequestIn(BaseModel):
+    """Quote request for a custom project that is not tied to a catalogue product."""
+
+    category: ProjectCategory
+    description: str = Field(min_length=10, max_length=2000)
+    quantity: int = Field(ge=1, le=100_000)
+    dimensions: str | None = Field(default=None, max_length=200)
+    desired_date: date | None = None
+    design_help: bool = False
+    customer: CustomerIn
+    file_ids: list[uuid.UUID] = Field(default_factory=list, max_length=5)
+    fulfillment_method: Literal["pickup", "delivery"] = "pickup"
+    delivery_address: str | None = Field(default=None, max_length=1000)
+    # Hidden form field: people leave it empty, automated spam usually fills it.
+    website: str | None = Field(default=None, max_length=200)
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: str) -> str:
+        normalized = value.strip()
+        if len(normalized) < 10:
+            raise ValueError("Describe the project in at least 10 characters")
+        return normalized
+
+    @field_validator("dimensions")
+    @classmethod
+    def normalize_dimensions(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return value.strip() or None
+
+    @field_validator("desired_date")
+    @classmethod
+    def validate_desired_date(cls, value: date | None) -> date | None:
+        if value is not None and value < date.today():
+            raise ValueError("The desired date cannot be in the past")
+        return value
+
+    @field_validator("delivery_address")
+    @classmethod
+    def validate_address(cls, value: str | None) -> str | None:
+        return validate_delivery_address(value)
+
+    @field_validator("website")
+    @classmethod
+    def reject_filled_honeypot(cls, value: str | None) -> str | None:
+        if value and value.strip():
+            raise ValueError("This request could not be accepted")
+        return None
+
+
 class OrderCreateIn(QuoteRequestIn):
     file_ids: list[uuid.UUID] = Field(min_length=1, max_length=5)
     payment_method: Literal["cash_on_fulfillment"] = "cash_on_fulfillment"
@@ -192,8 +256,12 @@ class AdminQuoteOut(BaseModel):
     status: Literal["pending", "quoted", "accepted", "declined"]
     product_name: str
     variant_name: str
+    project_category: str | None
     quantity: int
     selected_options: dict[str, str]
+    dimensions: str | None
+    desired_date: date | None
+    design_help: bool
     fulfillment_method: Literal["pickup", "delivery"]
     delivery_address: str | None
     notes: str | None

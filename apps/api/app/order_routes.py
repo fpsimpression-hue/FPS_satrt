@@ -12,6 +12,7 @@ from app.models import Customer, Order, OrderItem, QuoteRequest, UploadedFile
 from app.schemas import (
     OrderCreateIn,
     OrderOut,
+    ProjectQuoteRequestIn,
     QuoteRequestIn,
     QuoteRequestOut,
 )
@@ -19,6 +20,20 @@ from app.whatsapp import queue_whatsapp_update
 
 router = APIRouter(tags=["orders"])
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
+
+# Labels shown to the team for custom projects; keys match ProjectCategory.
+PROJECT_CATEGORY_LABELS: dict[str, str] = {
+    "enseignes": "Enseignes & signalétique",
+    "vehicules": "Habillage de véhicules",
+    "grand-format": "Grand format & événementiel",
+    "textile": "Textile personnalisé",
+    "objets-cadeaux": "Objets, trophées & cadeaux",
+    "imprimes-papeterie": "Imprimés, packaging & papeterie",
+    "decoration-tableaux": "Décoration & tableaux",
+    "plv-decoupe": "PLV & découpes personnalisées",
+    "autre": "Autre projet",
+}
+CUSTOM_PROJECT_LABEL = "Projet sur mesure"
 
 
 async def lock_unassigned_files(
@@ -47,7 +62,7 @@ async def lock_unassigned_files(
     return files
 
 
-def create_customer(details: QuoteRequestIn) -> Customer:
+def create_customer(details: QuoteRequestIn | ProjectQuoteRequestIn) -> Customer:
     return Customer(
         full_name=details.customer.full_name.strip(),
         phone=details.customer.phone.strip(),
@@ -59,6 +74,21 @@ def create_customer(details: QuoteRequestIn) -> Customer:
 
 def new_reference(prefix: str) -> str:
     return f"{prefix}-{secrets.token_hex(8).upper()}"
+
+
+async def queue_quote_received(session: AsyncSession, quote: QuoteRequest) -> None:
+    await queue_whatsapp_update(
+        session,
+        quote.customer,
+        event_type="quote_received",
+        reference=quote.reference,
+        details={
+            "fr": "Nous avons reçu votre demande de devis.",
+            "ar": "لقد تلقّينا طلب عرض السعر الخاص بكم.",
+            "en": "We have received your quote request.",
+        },
+        dedupe_key=f"quote:{quote.id}:received",
+    )
 
 
 @router.post("/quote-requests", response_model=QuoteRequestOut, status_code=201)
@@ -95,18 +125,49 @@ async def create_quote_request(
         )
         session.add(quote)
         await session.flush()
-        await queue_whatsapp_update(
-            session,
-            quote.customer,
-            event_type="quote_received",
+        await queue_quote_received(session, quote)
+        return QuoteRequestOut(
             reference=quote.reference,
-            details={
-                "fr": "Nous avons reçu votre demande de devis.",
-                "ar": "لقد تلقّينا طلب عرض السعر الخاص بكم.",
-                "en": "We have received your quote request.",
-            },
-            dedupe_key=f"quote:{quote.id}:received",
+            status="pending",
+            created_at=quote.created_at,
         )
+
+
+@router.post("/project-quote-requests", response_model=QuoteRequestOut, status_code=201)
+async def create_project_quote_request(
+    request: ProjectQuoteRequestIn,
+    session: SessionDep,
+) -> QuoteRequestOut:
+    if request.fulfillment_method == "delivery" and not request.delivery_address:
+        raise HTTPException(
+            status_code=422,
+            detail="A delivery address is required for delivery quote requests",
+        )
+    async with session.begin():
+        files = await lock_unassigned_files(session, request.file_ids)
+        quote = QuoteRequest(
+            reference=new_reference("DV"),
+            customer=create_customer(request),
+            project_category=request.category,
+            product_name=PROJECT_CATEGORY_LABELS[request.category],
+            variant_name=CUSTOM_PROJECT_LABEL,
+            quantity=request.quantity,
+            selected_options={},
+            dimensions=request.dimensions,
+            desired_date=request.desired_date,
+            design_help=request.design_help,
+            fulfillment_method=request.fulfillment_method,
+            delivery_address=(
+                request.delivery_address
+                if request.fulfillment_method == "delivery"
+                else None
+            ),
+            notes=request.description,
+            files=files,
+        )
+        session.add(quote)
+        await session.flush()
+        await queue_quote_received(session, quote)
         return QuoteRequestOut(
             reference=quote.reference,
             status="pending",
