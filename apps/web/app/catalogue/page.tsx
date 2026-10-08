@@ -16,6 +16,7 @@ import {
 } from "@/lib/api";
 import { localCatalogueProducts } from "@/lib/local-catalog";
 import { portfolioCategories } from "@/lib/portfolio";
+import { fallbackPhotos } from "@/lib/product-photos";
 
 const copy = {
   fr: {
@@ -165,13 +166,25 @@ export default function CataloguePage() {
             const images = [...product.images]
               .sort((left, right) => Number(right.is_primary) - Number(left.is_primary) || left.sort_order - right.sort_order)
               .slice(0, 3);
+            const fallback = images.length ? [] : (fallbackPhotos[product.slug] ?? []);
+            const photoCount = images.length || fallback.length;
             return (
               <article className={`catalogue-card catalogue-card-${(index % 6) + 1}${index === 0 ? " catalogue-card-featured" : ""}`} key={product.id}>
                 <div className="catalogue-card-top">
                   <span>{localized(product.category.translations, locale)}</span>
-                  <span aria-hidden="true">0{index + 1}</span>
                 </div>
-                <div className={`catalogue-image-set image-count-${images.length || 0}`}>
+                <div className={`catalogue-image-set image-count-${photoCount}`}>
+                  {fallback.map((photo, imageIndex) => (
+                    <Image
+                      alt=""
+                      className={`catalogue-set-image catalogue-set-image-${imageIndex + 1}`}
+                      height={440}
+                      key={photo}
+                      loading="lazy"
+                      src={`/portfolio/${photo}`}
+                      width={680}
+                    />
+                  ))}
                   {images.length > 0 ? images.map((image, imageIndex) => (
                     <Image
                       alt={image.alt_texts[locale] || localized(product.translations, locale)}
@@ -183,7 +196,7 @@ export default function CataloguePage() {
                       unoptimized
                       width={680}
                     />
-                  )) : (
+                  )) : fallback.length === 0 && (
                     <div className="catalogue-image-placeholder" aria-hidden="true">
                       <span>FAST PRINT</span><strong>{localized(product.category.translations, locale)}</strong>
                     </div>

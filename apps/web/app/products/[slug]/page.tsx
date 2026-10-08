@@ -17,6 +17,7 @@ import {
   type UploadResult,
   assetUrl,
 } from "@/lib/api";
+import { fallbackPhotos } from "@/lib/product-photos";
 
 const copy = {
   fr: {
@@ -339,6 +340,16 @@ export default function ProductPage({ params }: ProductPageProps) {
                       loading={index === 0 ? "eager" : "lazy"}
                       src={assetUrl(image.url)}
                       unoptimized
+                      width={900}
+                    />
+                  )) : fallbackPhotos[product.slug] ? fallbackPhotos[product.slug].map((photo, index) => (
+                    <Image
+                      alt=""
+                      className={index === 0 ? "product-gallery-image primary" : "product-gallery-image"}
+                      height={520}
+                      key={photo}
+                      loading={index === 0 ? "eager" : "lazy"}
+                      src={`/portfolio/${photo}`}
                       width={900}
                     />
                   )) : (
