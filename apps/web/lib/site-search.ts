@@ -95,6 +95,12 @@ const pages: PageDef[] = [
     keywords: "services prestations impression numérique design infographie conception graphique création logo graphic design printing خدمات طباعة تصميم جرافيك",
   },
   {
+    id: "a-propos",
+    href: (locale) => `/a-propos?lang=${locale}`,
+    title: { fr: "À propos de Fast Print Sahline", ar: "من نحن", en: "About Fast Print Sahline" },
+    keywords: "à propos qui sommes nous mission vision objectifs atelier équipe histoire chiffres partenaires about us team figures من نحن مهمتنا رؤيتنا شركاء",
+  },
+  {
     id: "faq",
     href: (locale) => `/faq?lang=${locale}`,
     title: { fr: "Questions fréquentes", ar: "الأسئلة الشائعة", en: "Frequently asked questions" },

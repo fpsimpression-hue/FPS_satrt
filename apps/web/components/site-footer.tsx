@@ -128,7 +128,7 @@ export function SiteFooter({ locale = "fr" }: SiteFooterProps) {
 
         <nav className="footer-column" aria-label={text.links}>
           <h2>{text.links}</h2>
-          <a href={`/?lang=${locale}#about-us`}>{text.about}</a>
+          <a href={`/a-propos?lang=${locale}`}>{text.about}</a>
           <a href={`/services?lang=${locale}`}>{text.services}</a>
           <a href={`/catalogue?lang=${locale}`}>{text.catalogue}</a>
           <a href={`/realisations?lang=${locale}`}>{text.gallery}</a>

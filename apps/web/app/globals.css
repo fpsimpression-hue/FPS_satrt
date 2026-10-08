@@ -3129,3 +3129,60 @@ main[dir="rtl"] .portfolio-viewer-nav { transform: scaleX(-1); }
 /* One primary button style across the site. */
 .button-orange { background: var(--ink); color: #fff; box-shadow: 0 8px 18px rgba(23, 23, 23, .12); }
 .button-orange:hover { background: var(--green); }
+
+/* ==========================================================================
+   Page À propos
+   ========================================================================== */
+.about-page h2 { margin: 0 0 clamp(22px, 3vw, 34px); font-size: clamp(30px, 3.6vw, 46px); font-weight: 700; letter-spacing: -.04em; line-height: 1.1; }
+.about-page[lang="ar"] h1, .about-page[lang="ar"] h2, .about-page[lang="ar"] h3 { font-family: "Noto Sans Arabic", "DM Sans", sans-serif; letter-spacing: 0; }
+.about-hero h1 { max-width: 820px; }
+.about-hero > p:not(.eyebrow) { max-width: 680px; font-size: 16px; line-height: 1.75; }
+.about-pillars { padding-block: clamp(48px, 6vw, 80px); }
+.about-pillar-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.about-pillar, .about-figure, .about-breakdown, .about-service-grid li {
+  border: 1px solid rgba(48, 38, 30, .09); border-radius: 20px; background: #fff; box-shadow: 0 8px 24px rgba(44, 34, 25, .05);
+}
+.about-pillar { padding: clamp(22px, 2.4vw, 30px); }
+.about-pillar-icon { display: grid; width: 48px; height: 48px; margin-bottom: 18px; place-items: center; border-radius: 14px; background: #fff1e7; color: #c2410c; }
+.about-pillar-icon svg { width: 24px; height: 24px; }
+.about-pillar h3 { margin: 0 0 10px; font: 800 21px/1.25 Manrope, "DM Sans", sans-serif; }
+.about-pillar p { margin: 0; color: #5d5651; font-size: 15px; line-height: 1.7; }
+.about-figures { background: linear-gradient(180deg, #fff8f2, var(--paper)); }
+.about-figure-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 0 0 20px; }
+.about-figure { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 6px; padding: 24px; }
+.about-figure dd { margin: 0; color: #c2410c; font: 800 clamp(40px, 4.6vw, 60px)/1 Manrope, "DM Sans", sans-serif; letter-spacing: -.03em; }
+.about-figure dt { color: #3c3631; font-size: 15px; font-weight: 600; line-height: 1.4; }
+.about-breakdowns { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; }
+.about-breakdown { padding: clamp(20px, 2.4vw, 28px); }
+.about-breakdown h3 { margin: 0 0 16px; font: 800 18px/1.3 Manrope, "DM Sans", sans-serif; }
+.about-breakdown ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.about-breakdown li a { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; min-height: 40px; padding: 6px 0; color: var(--ink); font-size: 14.5px; }
+.about-breakdown li a b { font: 800 15px/1 Manrope, "DM Sans", sans-serif; }
+.about-breakdown li a i { grid-column: 1 / -1; height: 6px; border-radius: 6px; background: linear-gradient(90deg, #ffb000, #f05a00); }
+.about-breakdown li a:hover span { color: #c2410c; }
+.about-product-list li a { grid-template-columns: minmax(0, 1fr) auto; border-bottom: 1px solid var(--line); }
+.about-product-list li a small { color: #8a817a; font-size: 13px; }
+.about-hint { margin: 14px 0 0; color: #6e655e; font-size: 13.5px; }
+.about-service-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
+.about-service-grid li { padding: 22px; }
+.about-service-grid h3 { margin: 0 0 8px; font: 700 17px/1.3 Manrope, "DM Sans", sans-serif; }
+.about-service-grid p { margin: 0; color: #5d5651; font-size: 14.5px; line-height: 1.6; }
+.about-partners { background: #fff; }
+.about-partners-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; margin-bottom: 26px; }
+.about-partners-heading h2 { margin: 0; }
+.about-partners-heading h2 span { color: #c2410c; }
+.about-partners-heading p { max-width: 420px; margin: 0; color: #5d5651; font-size: 15px; }
+.about-partner-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.about-partner-grid li { display: grid; min-height: 96px; place-items: center; border: 1px solid var(--line); border-radius: 16px; background: #fffdfb; }
+.about-partner-grid .partner-logo-mark img { mix-blend-mode: multiply; }
+@media (max-width: 980px) {
+  .about-pillar-grid, .about-service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .about-figure-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .about-breakdowns { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .about-pillar-grid, .about-service-grid { grid-template-columns: minmax(0, 1fr); }
+  .about-figure { padding: 18px; }
+  .about-partner-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.about-page .section-wrap { padding-block: clamp(48px, 6vw, 80px); }

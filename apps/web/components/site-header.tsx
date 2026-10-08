@@ -46,7 +46,7 @@ export function SiteHeader({ locale, onLocaleChange }: { locale: Locale; onLocal
           <a className="header-link" href={`/services?lang=${locale}`} onClick={closeMenu}>{text.services}</a>
           <a className="header-link" href={`/catalogue?lang=${locale}`} onClick={closeMenu}>{text.catalogue}</a>
           <a className="header-link" href={`/realisations?lang=${locale}`} onClick={closeMenu}>{text.gallery}</a>
-          <a className="header-link" href={`/?lang=${locale}#about-us`} onClick={closeMenu}>{text.about}</a>
+          <a className="header-link" href={`/a-propos?lang=${locale}`} onClick={closeMenu}>{text.about}</a>
           <a className="header-link" href={`/?lang=${locale}#contact`} onClick={closeMenu}>{text.contact}</a>
           <a className="quote-link" href={`/devis?lang=${locale}`} onClick={closeMenu}>{text.quote}<span aria-hidden="true">↗</span></a>
         </div>
