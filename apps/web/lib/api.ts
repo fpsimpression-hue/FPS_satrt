@@ -75,6 +75,14 @@ export function assetUrl(path: string): string {
   return `${apiBaseUrl}${path}`;
 }
 
+/** Error returned by the API; `status` lets each screen show a message suited to the visitor. */
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${apiBaseUrl}/api/v1${path}`, {
     ...init,
@@ -86,13 +94,15 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   });
 
   if (!response.ok) {
-    let result: { detail?: string } | null;
+    let detail: unknown;
     try {
-      result = (await response.json()) as { detail?: string };
+      detail = ((await response.json()) as { detail?: unknown }).detail;
     } catch {
-      throw new Error(`La requête a échoué (HTTP ${response.status}).`);
+      detail = undefined;
     }
-    throw new Error(result?.detail ?? `La requête a échoué (HTTP ${response.status}).`);
+    // Validation errors arrive as a list of objects; only plain messages are shown as-is.
+    const message = typeof detail === "string" ? detail : `La requête a échoué (HTTP ${response.status}).`;
+    throw new ApiError(message, response.status);
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;

@@ -1,10 +1,24 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getLocale, type Locale } from "@/lib/api";
+
+type ServiceId = "paper" | "textile" | "format" | "objects" | "clocks" | "events";
+
+// Photo principale puis deux vignettes, toutes issues de public/portfolio.
+// `focus` recadre la photo principale quand le sujet n’est pas au centre.
+const serviceVisuals: Record<ServiceId, { gallery: string; photos: readonly [string, string, string]; focus?: string }> = {
+  paper: { gallery: "imprimes-papeterie", photos: ["imprimes-papeterie/12.jpg", "imprimes-papeterie/04.jpg", "imprimes-papeterie/11.jpg"] },
+  textile: { gallery: "textile", photos: ["textile/02.jpg", "textile/03.jpg", "textile/06.jpg"] },
+  format: { gallery: "grand-format", photos: ["grand-format/11.jpg", "grand-format/03.jpg", "grand-format/06.jpg"] },
+  objects: { gallery: "objets-cadeaux", photos: ["objets-cadeaux/04.jpg", "objets-cadeaux/05.jpg", "objets-cadeaux/08.jpg"] },
+  clocks: { gallery: "enseignes", photos: ["enseignes/33.jpg", "imprimes-papeterie/07.jpg", "enseignes/30.jpg"] },
+  events: { gallery: "plv-decoupe", photos: ["grand-format/12.jpg", "plv-decoupe/04.jpg", "plv-decoupe/02.jpg"], focus: "center 85%" },
+};
 
 const copy = {
   fr: {
@@ -13,13 +27,15 @@ const copy = {
     intro: "À Sahline, nous réunissons conception graphique, impression numérique et fabrication personnalisée : supports imprimés, enseignes, décoration événementielle et créations sur mesure.",
     explore: "Voir le catalogue",
     contact: "Parler de mon projet",
+    gallery: "Voir les réalisations",
+    quote: "Demander un devis",
     services: [
-      { number: "01", name: "Impression papier", intro: "Des supports soignés pour présenter votre activité et partager vos informations.", examples: ["Cartes de visite", "Flyers & dépliants", "Menus et papeterie"], art: "paper" },
-      { number: "02", name: "Impression textile", intro: "Des créations personnalisées pour votre équipe, votre marque ou vos événements.", examples: ["Textiles personnalisés", "Séries adaptées à votre besoin", "Préparation de votre visuel"], art: "textile" },
-      { number: "03", name: "Grand format & espaces", intro: "Des visuels conçus pour attirer le regard dans vos espaces commerciaux et lors de vos événements.", examples: ["Banderoles & supports grand format", "Habillage de stands et vitrines", "X-Banners personnalisés"], art: "format" },
-      { number: "04", name: "Objets & créations", intro: "Des objets personnalisés et des pièces sur mesure pour marquer une occasion.", examples: ["Stylos personnalisés", "Trophées & médailles", "Créations à la demande"], art: "objects" },
-      { number: "05", name: "Horloges murales LED", intro: "Des horloges en Plexiglas personnalisées qui associent décoration moderne, finitions soignées et éclairage lumineux.", examples: ["Design adapté à votre identité", "Plexiglas de qualité", "Éclairage LED et choix de couleurs"], art: "objects" },
-      { number: "06", name: "Décoration événementielle", intro: "Des lettres et formes en PVC habillées de vinyle imprimé pour créer un décor élégant et à votre image.", examples: ["Découpes en PVC sur mesure", "Impression vinyle haute définition", "Mariages, fêtes et événements professionnels"], art: "format" },
+      { id: "paper", name: "Impression papier", intro: "Des supports soignés pour présenter votre activité et partager vos informations.", examples: ["Cartes de visite", "Flyers & dépliants", "Menus et papeterie"] },
+      { id: "textile", name: "Impression textile", intro: "Des créations personnalisées pour votre équipe, votre marque ou vos événements.", examples: ["T-shirts & tenues d’équipe", "Petites et grandes séries", "Préparation de votre visuel"] },
+      { id: "format", name: "Grand format & espaces", intro: "Des visuels qui attirent le regard dans vos espaces commerciaux et lors de vos événements.", examples: ["Banderoles & bâches", "Stands et vitrines", "X-Banners & roll-ups"] },
+      { id: "objects", name: "Objets & créations", intro: "Des objets personnalisés et des pièces sur mesure pour marquer une occasion.", examples: ["Stylos personnalisés", "Trophées & médailles", "Créations à la demande"] },
+      { id: "clocks", name: "Horloges murales LED", intro: "Des horloges en Plexiglas à vos couleurs, avec un éclairage LED soigné.", examples: ["Design à votre identité", "Plexiglas de qualité", "Choix des couleurs LED"] },
+      { id: "events", name: "Décoration événementielle", intro: "Des lettres et formes en PVC habillées de vinyle imprimé pour un décor élégant et à votre image.", examples: ["Découpes PVC sur mesure", "Vinyle haute définition", "Mariages, fêtes & entreprises"] },
     ],
     processEyebrow: "Notre méthode",
     processTitle: "Chaque projet avance étape par étape.",
@@ -38,13 +54,15 @@ const copy = {
     intro: "نجمع في الساحلين بين التصميم الجرافيكي والطباعة الرقمية والتصنيع حسب الطلب: المطبوعات واللافتات وديكورات المناسبات والإبداعات المخصّصة.",
     explore: "تصفحوا الكتالوج",
     contact: "تحدثوا عن مشروعكم",
+    gallery: "شاهدوا الأعمال",
+    quote: "اطلبوا عرض سعر",
     services: [
-      { number: "01", name: "الطباعة على الورق", intro: "مطبوعات أنيقة للتعريف بنشاطكم ومشاركة معلوماتكم.", examples: ["بطاقات الأعمال", "منشورات ومطويات", "قوائم الطعام والمطبوعات المكتبية"], art: "paper" },
-      { number: "02", name: "الطباعة على المنسوجات", intro: "تصاميم مخصصة لفريقكم أو علامتكم أو مناسباتكم.", examples: ["منسوجات مخصصة", "كميات تناسب احتياجكم", "إعداد التصميم للطباعة"], art: "textile" },
-      { number: "03", name: "الطباعة الكبيرة وتجهيز المساحات", intro: "تصاميم تجذب الأنظار في المساحات التجارية والمناسبات.", examples: ["لافتات ومواد مطبوعة كبيرة", "تجهيز الأجنحة وواجهات المتاجر", "حوامل X-Banner مخصّصة"], art: "format" },
-      { number: "04", name: "الهدايا والتصاميم الخاصة", intro: "أغراض مخصصة وقطع حسب الطلب للاحتفاء بالمناسبات.", examples: ["أقلام مخصصة", "كؤوس وميداليات", "تصاميم حسب الطلب"], art: "objects" },
-      { number: "05", name: "ساعات حائط بإضاءة LED", intro: "ساعات حائط من الأكريليك بتصميم مخصّص، تجمع بين الديكور العصري والإضاءة الأنيقة.", examples: ["تصميم يعكس هويتكم", "أكريليك عالي الجودة", "إضاءة LED بألوان متعددة"], art: "objects" },
-      { number: "06", name: "ديكور المناسبات", intro: "حروف وأشكال من PVC مغطاة بطباعة الفينيل لتصميم ديكور أنيق يعكس ذوقكم.", examples: ["قصّات PVC حسب الطلب", "طباعة فينيل عالية الدقة", "للأعراس والاحتفالات والمناسبات المهنية"], art: "format" },
+      { id: "paper", name: "الطباعة على الورق", intro: "مطبوعات أنيقة للتعريف بنشاطكم ومشاركة معلوماتكم.", examples: ["بطاقات الأعمال", "منشورات ومطويات", "قوائم الطعام والقرطاسية"] },
+      { id: "textile", name: "الطباعة على المنسوجات", intro: "تصاميم مخصصة لفريقكم أو علامتكم أو مناسباتكم.", examples: ["قمصان وأزياء الفرق", "كميات صغيرة وكبيرة", "إعداد التصميم للطباعة"] },
+      { id: "format", name: "الطباعة الكبيرة وتجهيز المساحات", intro: "تصاميم تجذب الأنظار في المساحات التجارية والمناسبات.", examples: ["لافتات وقماش مطبوع", "الأجنحة والواجهات", "حوامل X-Banner وRoll-up"] },
+      { id: "objects", name: "الهدايا والتصاميم الخاصة", intro: "أغراض مخصصة وقطع حسب الطلب للاحتفاء بالمناسبات.", examples: ["أقلام مخصصة", "كؤوس وميداليات", "تصاميم حسب الطلب"] },
+      { id: "clocks", name: "ساعات حائط بإضاءة LED", intro: "ساعات من الأكريليك بألوانكم، مع إضاءة LED أنيقة.", examples: ["تصميم يعكس هويتكم", "أكريليك عالي الجودة", "اختيار ألوان الإضاءة"] },
+      { id: "events", name: "ديكور المناسبات", intro: "حروف وأشكال من PVC مغطاة بطباعة الفينيل لديكور أنيق يعكس ذوقكم.", examples: ["قصّات PVC حسب الطلب", "فينيل عالي الدقة", "أعراس واحتفالات ومؤسسات"] },
     ],
     processEyebrow: "طريقتنا",
     processTitle: "نتابع كل مشروع خطوة بخطوة.",
@@ -63,13 +81,15 @@ const copy = {
     intro: "Based in Sahline, we bring graphic design, digital printing and custom production together for print, signs, event decor and made-to-order creations.",
     explore: "Browse the catalogue",
     contact: "Tell us about your project",
+    gallery: "See our work",
+    quote: "Request a quote",
     services: [
-      { number: "01", name: "Paper printing", intro: "Polished print essentials for presenting your business and sharing information.", examples: ["Business cards", "Flyers & folded leaflets", "Menus & stationery"], art: "paper" },
-      { number: "02", name: "Textile printing", intro: "Custom designs for your team, brand or events.", examples: ["Custom textiles", "Runs sized for your needs", "Artwork preparation"], art: "textile" },
-      { number: "03", name: "Large format & spaces", intro: "Graphics designed to catch the eye in commercial spaces and at events.", examples: ["Banners & large-format displays", "Booth and window graphics", "Custom X-Banners"], art: "format" },
-      { number: "04", name: "Custom objects & designs", intro: "Personalised objects and made-to-order pieces for special occasions.", examples: ["Custom pens", "Trophies & medals", "Made-to-order designs"], art: "objects" },
-      { number: "05", name: "LED wall clocks", intro: "Custom Plexiglas clocks that pair modern decor, careful finishing and eye-catching LED lighting.", examples: ["A design made for your identity", "High-quality Plexiglas", "LED lighting with colour choices"], art: "objects" },
-      { number: "06", name: "Event decoration", intro: "Custom PVC letters and shapes finished with printed vinyl for an elegant, personal event setting.", examples: ["Made-to-measure PVC cutouts", "High-definition vinyl printing", "Weddings, celebrations and business events"], art: "format" },
+      { id: "paper", name: "Paper printing", intro: "Polished print essentials for presenting your business and sharing information.", examples: ["Business cards", "Flyers & leaflets", "Menus & stationery"] },
+      { id: "textile", name: "Textile printing", intro: "Custom designs for your team, brand or events.", examples: ["T-shirts & team wear", "Small and large runs", "Artwork preparation"] },
+      { id: "format", name: "Large format & spaces", intro: "Graphics that catch the eye in commercial spaces and at events.", examples: ["Banners & tarpaulins", "Booths & shop windows", "X-banners & roll-ups"] },
+      { id: "objects", name: "Custom objects & designs", intro: "Personalised objects and made-to-order pieces for special occasions.", examples: ["Custom pens", "Trophies & medals", "Made-to-order designs"] },
+      { id: "clocks", name: "LED wall clocks", intro: "Plexiglas clocks in your colours, with refined LED lighting.", examples: ["Designed for your identity", "High-quality Plexiglas", "Choice of LED colours"] },
+      { id: "events", name: "Event decoration", intro: "PVC letters and shapes finished with printed vinyl for an elegant, personal setting.", examples: ["Made-to-measure PVC cutouts", "High-definition vinyl", "Weddings, parties & businesses"] },
     ],
     processEyebrow: "How we work",
     processTitle: "Every project moves forward, step by step.",
@@ -88,7 +108,9 @@ const copy = {
   intro: string;
   explore: string;
   contact: string;
-  services: { number: string; name: string; intro: string; examples: string[]; art: string }[];
+  gallery: string;
+  quote: string;
+  services: { id: ServiceId; name: string; intro: string; examples: string[] }[];
   processEyebrow: string;
   processTitle: string;
   steps: [string, string, string][];
@@ -124,24 +146,43 @@ export default function ServicesPage() {
         </div>
       </section>
       <section className="service-detail-grid section-wrap" aria-label={text.eyebrow}>
-        {text.services.map((service) => (
-          <article className={`service-detail-card service-detail-${service.art}`} key={service.number}>
-            <div className={`service-detail-art service-art-${service.art}`} aria-hidden="true">
-              <span className="service-art-index">{service.number}</span>
-              <span className="service-art-mark">FPS</span>
-              <span className="service-art-caption">FAST PRINT · SAHLINE</span>
-            </div>
-            <div className="service-detail-copy">
-              <p className="eyebrow"><span />{service.number}</p>
-              <h2>{service.name}</h2>
-              <p>{service.intro}</p>
-              <ul>
-                {service.examples.map((example) => <li key={example}>{example}</li>)}
-              </ul>
-              <a href={`/catalogue?lang=${locale}`}>{text.explore}<span aria-hidden="true">↗</span></a>
-            </div>
-          </article>
-        ))}
+        {text.services.map((service) => {
+          const visual = serviceVisuals[service.id];
+          const [mainPhoto, ...thumbnails] = visual.photos;
+
+          return (
+            <article className="service-detail-card" key={service.id}>
+              <a
+                aria-label={`${text.gallery} : ${service.name}`}
+                className="service-detail-media"
+                href={`/realisations?lang=${locale}#portfolio-${visual.gallery}`}
+              >
+                <Image
+                  alt=""
+                  className="service-media-main"
+                  fill
+                  sizes="(max-width: 700px) 92vw, 46vw"
+                  src={`/portfolio/${mainPhoto}`}
+                  style={visual.focus ? { objectPosition: visual.focus } : undefined}
+                />
+                <span className="service-media-thumbs" aria-hidden="true">
+                  {thumbnails.map((photo) => (
+                    <span key={photo}><Image alt="" fill sizes="96px" src={`/portfolio/${photo}`} /></span>
+                  ))}
+                </span>
+                <span className="service-media-cta" aria-hidden="true">{text.gallery}<span>↗</span></span>
+              </a>
+              <div className="service-detail-copy">
+                <h2>{service.name}</h2>
+                <p>{service.intro}</p>
+                <ul className="service-tags">
+                  {service.examples.map((example) => <li key={example}>{example}</li>)}
+                </ul>
+                <a className="button button-dark" href={`/devis?lang=${locale}&projet=${visual.gallery}`}>{text.quote}<span aria-hidden="true">↗</span></a>
+              </div>
+            </article>
+          );
+        })}
       </section>
       <section className="service-process section-wrap">
         <div className="section-heading">
@@ -158,7 +199,7 @@ export default function ServicesPage() {
         </div>
       </section>
       <section className="service-closing section-wrap">
-        <div><p className="eyebrow"><span />FAST PRINT · SAHLINE</p><h2>{text.closing}</h2><p>{text.closingBody}</p></div>
+        <div><h2>{text.closing}</h2><p>{text.closingBody}</p></div>
         <a className="button button-dark" href={`/?lang=${locale}#contact`}>{text.contact}<span aria-hidden="true">↗</span></a>
       </section>
       <SiteFooter locale={locale} />

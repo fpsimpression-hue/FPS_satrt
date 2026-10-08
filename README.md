@@ -40,11 +40,19 @@ Générer un nouveau hash de mot de passe avec
 `.\.venv\Scripts\python.exe -c "from getpass import getpass; from pwdlib import PasswordHash; print(PasswordHash.recommended().hash(getpass()))"`
 et remplacer `ADMIN_PASSWORD_HASH` dans `.env`, en conservant les guillemets simples autour du hash (il contient des `$`). Le secret de session est une chaîne aléatoire d’au moins 32 caractères. Recréer ensuite l’API avec `docker compose up -d --force-recreate api`. Derrière HTTPS en production, définir `ADMIN_COOKIE_SECURE=true`.
 
-Depuis cet espace, l’équipe peut traiter les devis, ajouter un fichier reçu, préparer le montant total de l’offre, créer une commande après accord du client, suivre les commandes, valider les fichiers avant le lancement de production, publier ou désactiver des tarifs et suivre les notifications WhatsApp.
+L’onglet **Suivi des commandes** présente chaque dossier dans l’une des cinq étapes de l’atelier, avec un seul bouton pour la prochaine action :
+
+1. **Nouvelles demandes** : saisir le prix total puis l’envoyer au client.
+2. **Réponse du client** : quand le client accepte, créer la commande (un fichier à imprimer doit être joint).
+3. **À lancer** : cocher « J’ai vérifié le fichier » puis lancer la production ; cette action valide les fichiers et démarre la production en une fois.
+4. **En production** : indiquer que la commande est prête.
+5. **À remettre** : encaisser le montant affiché et confirmer la remise.
+
+Les dossiers refusés, annulés ou remis sont rangés dans l’**Historique**. Les actions irréversibles demandent une confirmation. La recherche (touche `/`) retrouve un dossier dans toutes les étapes par nom, téléphone (avec ou sans indicatif), référence, produit, description ou adresse, en tolérant les accents et les fautes de frappe. L’espace permet aussi de publier ou retirer des tarifs, de gérer les photos des produits et de suivre les messages WhatsApp.
 
 ### Images du catalogue
 
-Dans **Administration → Images produits**, l’équipe peut ajouter jusqu’à 20 visuels JPEG, PNG ou WebP (8 Mo maximum par image), choisir une image principale et supprimer des visuels. Les descriptions alternatives sont conservées en français, arabe et anglais ; le catalogue et la page produit affichent automatiquement les images actives.
+Dans **Administration → Photos des produits**, l’équipe peut ajouter jusqu’à 20 visuels JPEG, PNG ou WebP (8 Mo maximum par image), choisir une image principale et supprimer des visuels. Les descriptions alternatives sont conservées en français, arabe et anglais ; le catalogue et la page produit affichent automatiquement les images actives.
 
 La table `product_images` conserve seulement les métadonnées, la clé de stockage, le type, la taille et le SHA-256. Les fichiers binaires restent hors de PostgreSQL, dans un volume Docker persistant dédié, distinct des fichiers d’impression téléversés par les clients. Les clés aléatoires, validations de signature, limites de taille, index par produit/ordre et contrainte d’image principale unique gardent la galerie contrôlée. Cette séparation protège la base contre la croissance des fichiers et simplifie les sauvegardes par type de données. Pour déployer plusieurs hôtes ou réplicas API, remplacer le stockage local par un stockage objet partagé (S3/compatible) et, idéalement, un CDN avant d’activer la mise à l’échelle horizontale ; un volume Docker local n’est pas un stockage partagé multi-hôtes.
 
@@ -58,7 +66,7 @@ Avant d’activer l’envoi, créer et faire approuver trois modèles WhatsApp U
 - AR : `مرحباً {{1}}، تحديث من Fast Print Sahline للطلب {{2}}: {{3}}`
 - EN : `Hello {{1}}, an update from Fast Print Sahline for {{2}}: {{3}}`
 
-Renseigner les variables Meta dans `.env` : `WHATSAPP_ACCESS_TOKEN` (jeton Meta), `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_API_VERSION` (version Graph API prise en charge, au format `vNN.N`) et les noms exacts approuvés dans `WHATSAPP_TEMPLATE_FR`, `WHATSAPP_TEMPLATE_AR` et `WHATSAPP_TEMPLATE_EN`. Les noms et variables du modèle doivent correspondre. Ne jamais partager le jeton dans le dépôt ou la conversation. Puis exécuter `docker compose up -d --build`; le worker garde les notifications en attente tant que la configuration n’est pas complète. Vérifier l’état et les éventuels échecs dans l’onglet **Notifications** de l’administration. Les identifiants Meta et l’approbation des modèles sont requis avant tout envoi réel.
+Renseigner les variables Meta dans `.env` : `WHATSAPP_ACCESS_TOKEN` (jeton Meta), `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_API_VERSION` (version Graph API prise en charge, au format `vNN.N`) et les noms exacts approuvés dans `WHATSAPP_TEMPLATE_FR`, `WHATSAPP_TEMPLATE_AR` et `WHATSAPP_TEMPLATE_EN`. Les noms et variables du modèle doivent correspondre. Ne jamais partager le jeton dans le dépôt ou la conversation. Puis exécuter `docker compose up -d --build`; le worker garde les notifications en attente tant que la configuration n’est pas complète. Vérifier l’état et les éventuels échecs dans l’onglet **Messages WhatsApp** de l’administration. Les identifiants Meta et l’approbation des modèles sont requis avant tout envoi réel.
 
 Pour lancer uniquement le frontend hors Docker : exécuter `npm install`, puis `npm run dev`.
 Pour démarrer l’API depuis un terminal Windows : créer l’environnement avec
@@ -77,6 +85,8 @@ puis lancer `.\.venv\Scripts\python.exe -m pytest apps\api\tests`.
 - Une commande immédiate nécessite un tarif validé, un fichier prêt à imprimer et le retrait en atelier. Le paiement est dû au retrait.
 - La livraison reste une demande de devis tant que ses frais et conditions ne sont pas configurés ; son coût n’est jamais omis du total.
 - Les fichiers PDF, PNG, JPEG et TIFF sont limités à 25 Mo par défaut, vérifiés par signature, renommés aléatoirement et stockés dans un volume privé. Le fichier reste en attente de vérification par l’équipe avant production.
+- La page `/devis` accepte aussi les projets sur mesure hors catalogue (enseignes, véhicules, décoration…) : type de projet, description, quantité, format, date souhaitée, aide graphique et jusqu’à 5 fichiers. La demande est enregistrée dans `quote_requests` sans produit du catalogue, puis suit le même parcours de devis et de commande.
+- La recherche du site (loupe de la barre de navigation, `Ctrl K` ou `/`) couvre les produits, les savoir-faire, les photos de réalisations, la FAQ et les pages utiles, en français, arabe et anglais, avec tolérance aux accents, aux fautes de frappe et aux synonymes courants.
 
 ## Endpoints catalogue et commande
 
@@ -85,6 +95,7 @@ puis lancer `.\.venv\Scripts\python.exe -m pytest apps\api\tests`.
 - `GET /api/v1/catalog/products/{slug}`
 - `POST /api/v1/catalog/products/{product_id}/price`
 - `POST /api/v1/quote-requests`
+- `POST /api/v1/project-quote-requests` (projet sur mesure sans produit du catalogue)
 - `POST /api/v1/orders`
 - `POST /api/v1/uploads`
 

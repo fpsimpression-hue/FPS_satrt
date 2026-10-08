@@ -1,22 +1,25 @@
 "use client";
 
 import Image from "next/image";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
-import { ServiceOrbit } from "@/components/service-orbit";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
-type Language = "fr" | "ar" | "en";
+import { ServiceOrbit } from "@/components/service-orbit";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { getLocale, type Locale } from "@/lib/api";
+import { faqContent } from "@/lib/faq";
+import { portfolioCategories } from "@/lib/portfolio";
+
 type Partner = {
   name: string;
   logo: string;
   crop: readonly [sourceWidth: number, sourceHeight: number, x: number, y: number, width: number, height: number];
 };
 
-const partnerHeadings: Record<Language, string> = {
-  fr: "Nos partenaires",
-  ar: "شركاؤنا",
-  en: "Our partners",
+type Testimonial = {
+  quote: Record<Locale, string>;
+  author: string;
+  company?: string;
 };
 
 const partners: Partner[] = [
@@ -35,23 +38,49 @@ const partners: Partner[] = [
   { name: "SEWS-TN", logo: "/partners/sews-tn.jpg", crop: [170, 151, 12, 12, 148, 120] },
 ];
 
+// Ajouter ici uniquement des témoignages réels, publiés avec l’accord du client.
+// La section s’affiche automatiquement dès qu’un témoignage est renseigné.
+const testimonials: Testimonial[] = [];
+
+// Produits affichés sur l’orbite du hero, dans l’ordre du portfolio.
+const orbitProducts: Record<string, { image: string; label: Record<Locale, string> }> = {
+  enseignes: { image: "30.jpg", label: { fr: "Enseignes", ar: "لافتات", en: "Signs" } },
+  vehicules: { image: "02.jpg", label: { fr: "Véhicules", ar: "مركبات", en: "Vehicles" } },
+  "grand-format": { image: "05.jpg", label: { fr: "Grand format", ar: "طباعة كبيرة", en: "Large format" } },
+  textile: { image: "03.jpg", label: { fr: "Textile", ar: "منسوجات", en: "Textiles" } },
+  "objets-cadeaux": { image: "04.jpg", label: { fr: "Trophées & cadeaux", ar: "كؤوس وهدايا", en: "Gifts & awards" } },
+  "imprimes-papeterie": { image: "09.jpg", label: { fr: "Imprimés", ar: "مطبوعات", en: "Print" } },
+  "decoration-tableaux": { image: "08.jpg", label: { fr: "Décoration", ar: "ديكور", en: "Decor" } },
+  "plv-decoupe": { image: "03.jpg", label: { fr: "PLV & découpes", ar: "مجسّمات العرض", en: "Displays" } },
+};
+
+const workCovers: Record<string, { image: string; layout?: "feature" | "wide" }> = {
+  enseignes: { image: "03.jpg", layout: "feature" },
+  vehicules: { image: "02.jpg" },
+  "grand-format": { image: "06.jpg" },
+  textile: { image: "02.jpg" },
+  "objets-cadeaux": { image: "04.jpg" },
+  "imprimes-papeterie": { image: "04.jpg" },
+  "decoration-tableaux": { image: "08.jpg", layout: "wide" },
+  "plv-decoupe": { image: "03.jpg" },
+};
+
 const copy = {
   fr: {
-    eyebrow: "Impression numérique · Infographie · Design à Sahline",
+    eyebrow: "Atelier d’impression & publicité · Sahline",
     headline: "Vos idées\nprennent forme.",
-    intro:
-      "De la conception graphique à la fabrication, Fast Print Sahline personnalise vos supports : impression, enseignes, décoration événementielle et créations sur mesure.",
-    artCreative: "CRÉATIVITÉ",
-    artPrecision: "PRÉCISION",
-    artInnovation: "INNOVATION",
-    artSignature: "L’art de l’impression",
-    explore: "Découvrir nos services",
-    contact: "Comment ça se passe ?",
-    note: "Un tarif précis dépend du produit et de ses finitions. Demandez un devis pour une combinaison non affichée.",
-    categoriesTitle: "Tout commence par une idée.",
-    categoriesIntro:
-      "Des supports du quotidien aux créations qui vous ressemblent, découvrez les possibilités.",
-    categoriesVideoLabel: "Vidéo de présentation Fast Print Sahline",
+    intro: "Enseignes, habillage de véhicules, textile, objets personnalisés et imprimés : Fast Print Sahline conçoit et fabrique vos supports, de l’idée à la réalisation.",
+    primary: "Demander un devis",
+    secondary: "Voir nos réalisations",
+    whatsapp: "Une question ? Écrivez-nous sur WhatsApp",
+    assurances: ["Accompagnement graphique", "Fichier vérifié avant impression", "Retrait à l’atelier ou livraison"],
+    signature: "« L’art de l’impression »",
+    orbitLabel: "Nos produits",
+    partners: "Ils nous font confiance",
+    workEyebrow: "Nos savoir-faire",
+    workTitle: "Tout commence par une idée.",
+    workIntro: "Des enseignes lumineuses aux cadeaux d’entreprise, découvrez ce que nous fabriquons chaque jour à l’atelier.",
+    workCta: "Voir toutes les réalisations",
     processEyebrow: "L’impression, en toute confiance",
     processTitle: "Votre commande, étape par étape.",
     processIntro: "Préparez votre projet en quatre étapes simples avec notre équipe.",
@@ -61,52 +90,40 @@ const copy = {
       ["03", "Confirmez votre commande", "Nous vérifions votre fichier et confirmons le prix ou le devis avant production."],
       ["04", "Récupérez votre commande", "Choisissez le retrait à l’atelier ou la livraison."],
     ],
+    aboutEyebrow: "À propos de Fast Print Sahline",
+    aboutTitle: "Impression, design et créations sur mesure.",
+    aboutBody: "À Sahline, Fast Print Sahline réunit impression numérique, conception graphique et fabrication personnalisée : supports imprimés, enseignes, décoration événementielle et objets créés à votre image.",
+    videoLabel: "Vidéo de présentation de l’atelier Fast Print Sahline",
+    videoCaption: "L’atelier en images",
+    pauseVideo: "Mettre la vidéo en pause",
+    playVideo: "Lire la vidéo",
+    promises: [
+      ["Conception graphique", "Pas encore de visuel ? Notre équipe crée ou adapte votre fichier pour l’impression."],
+      ["Contrôle avant production", "Chaque fichier est vérifié par l’atelier avant le lancement de l’impression."],
+      ["Des prix clairs", "Un tarif s’affiche lorsqu’il est validé ; sinon, l’atelier vous prépare un devis."],
+      ["Retrait ou livraison", "Récupérez votre commande à Sahline ou faites-la livrer. Paiement à la réception."],
+    ],
+    aboutCta: "Voir les produits et tarifs",
     testimonialsEyebrow: "La parole à nos clients",
     testimonialsTitle: "Ce que nos clients disent.",
-    testimonialsIntro: "Les témoignages de nos clients seront publiés ici avec leur accord.",
-    testimonialsPlaceholder: "Témoignage à compléter",
-    testimonialAttribution: "Nom du client à compléter",
-    footer: "Impression soignée. Idées sans limites.",
-    admin: "Espace équipe",
-    location: "Sahline, Tunisie",
-    language: "Langue",
-    faqEyebrow: "Questions fréquentes",
-    faqTitle: "Les réponses avant de vous lancer.",
-    faqIntro: "Besoin d’un tarif ou d’un conseil ? Voici comment se passe une demande chez Fast Print Sahline.",
-    faqs: [
-      ["Comment demander un devis ou passer commande ?", "Choisissez un produit dans le catalogue, précisez le format et les options, puis indiquez la quantité et vos coordonnées. Selon le tarif disponible pour votre choix, vous pourrez commander directement ou envoyer une demande de devis."],
-      ["Comment le prix est-il calculé ?", "Le prix dépend du produit, de la quantité et des options choisies. Un tarif s’affiche lorsqu’une grille validée correspond à votre sélection ; sinon, vous pouvez demander un devis à l’atelier."],
-      ["Quels fichiers puis-je transmettre ?", "Le formulaire accepte les fichiers PDF, PNG, JPEG et TIFF, jusqu’à 25 Mo. L’équipe vérifie le fichier avant le lancement en production."],
-      ["Puis-je choisir la livraison ?", "Vous pouvez choisir le retrait à l’atelier ou la livraison. Pour une livraison, indiquez votre adresse dans le formulaire. Le paiement prévu sur le site se fait à la réception ou au retrait."],
-      ["La production commence-t-elle dès l’envoi du formulaire ?", "Non. Votre demande et votre fichier sont vérifiés avant la production. Si un tarif ou un détail doit être confirmé, l’atelier échange avec vous avant de démarrer."],
-    ],
-    contactEyebrow: "Parlons de votre projet",
-    contactTitle: "Une idée à imprimer ?",
-    contactBody: "Décrivez-nous le support souhaité, la quantité et les finitions envisagées. Nous pourrons étudier votre demande.",
-    phoneLabel: "Appelez-nous",
-    emailLabel: "Écrivez-nous",
-    locationLabel: "Atelier",
-    contactLocation: "Sahline, Monastir, Tunisie",
-    pricingEyebrow: "Des prix clairs",
-    pricingTitle: "Un tarif adapté à votre projet.",
-    pricingBody: "Les tarifs dépendent du produit, de la quantité et des finitions. Consultez le catalogue pour voir les prix disponibles ou demandez un devis pour vos options.",
-    pricingAction: "Voir les produits",
+    testimonialsIntro: "Des retours publiés avec l’accord de nos clients.",
+    faqAll: "Toutes les questions",
   },
   ar: {
-    eyebrow: "الطباعة الرقمية · التصميم الجرافيكي · فاست برينت الساحلين",
+    eyebrow: "ورشة طباعة وإشهار · الساحلين",
     headline: "نحوّل أفكاركم\nإلى واقع.",
-    intro:
-      "من التصميم الجرافيكي إلى التصنيع، نخصّص مطبوعاتكم ولافتاتكم وديكورات مناسباتكم ومنتجاتكم حسب الطلب.",
-    artCreative: "إبداع",
-    artPrecision: "دقّة",
-    artInnovation: "ابتكار",
-    artSignature: "فن الطباعة",
-    explore: "اكتشفوا خدماتنا",
-    contact: "كيف تتم العملية؟",
-    note: "يتحدد السعر حسب المنتج وخيارات التشطيب. اطلبوا عرض سعر للخيارات غير المتاحة.",
-    categoriesTitle: "كل شيء يبدأ بفكرة.",
-    categoriesIntro: "من المطبوعات اليومية إلى الإبداعات التي تعبّر عنكم، اكتشفوا الإمكانيات.",
-    categoriesVideoLabel: "فيديو تعريفي عن Fast Print Sahline",
+    intro: "لافتات، تغليف السيارات، منسوجات، هدايا مخصّصة ومطبوعات: تصمّم Fast Print Sahline موادكم وتنفّذها، من الفكرة إلى الإنجاز.",
+    primary: "اطلبوا عرض سعر",
+    secondary: "شاهدوا أعمالنا",
+    whatsapp: "لديكم سؤال؟ راسلونا على واتساب",
+    assurances: ["مرافقة في التصميم", "مراجعة الملف قبل الطباعة", "استلام من الورشة أو توصيل"],
+    signature: "« فن الطباعة »",
+    orbitLabel: "منتجاتنا",
+    partners: "يثقون بنا",
+    workEyebrow: "مجالات خبرتنا",
+    workTitle: "كل شيء يبدأ بفكرة.",
+    workIntro: "من اللافتات المضيئة إلى هدايا المؤسسات، اكتشفوا ما ننجزه كل يوم في ورشتنا.",
+    workCta: "شاهدوا كل أعمالنا",
     processEyebrow: "الطباعة بكل ثقة",
     processTitle: "طلبكم، خطوة بخطوة.",
     processIntro: "حضّروا مشروعكم في أربع خطوات بسيطة مع فريقنا.",
@@ -116,53 +133,40 @@ const copy = {
       ["03", "أكّدوا طلبكم", "نراجع الملف ونؤكد السعر أو عرض السعر قبل الإنتاج."],
       ["04", "استلموا طلبكم", "اختاروا الاستلام من الورشة أو التوصيل."],
     ],
+    aboutEyebrow: "من نحن · Fast Print Sahline",
+    aboutTitle: "طباعة وتصميم وإبداعات حسب الطلب.",
+    aboutBody: "تجمع Fast Print Sahline في الساحلين بين الطباعة الرقمية والتصميم الجرافيكي والتصنيع المخصّص: المطبوعات واللافتات وديكورات المناسبات والمنتجات المصمّمة حسب هويتكم.",
+    videoLabel: "فيديو تعريفي بورشة Fast Print Sahline",
+    videoCaption: "الورشة بالصور",
+    pauseVideo: "إيقاف الفيديو مؤقتاً",
+    playVideo: "تشغيل الفيديو",
+    promises: [
+      ["التصميم الجرافيكي", "ليس لديكم تصميم بعد؟ يصمّم فريقنا ملفكم أو يجهّزه للطباعة."],
+      ["مراجعة قبل الإنتاج", "تراجع الورشة كل ملف قبل بدء الطباعة."],
+      ["أسعار واضحة", "يظهر السعر عند اعتماده، وإلا تُعدّ لكم الورشة عرض سعر."],
+      ["استلام أو توصيل", "استلموا طلبكم من الساحلين أو اطلبوا توصيله، والدفع عند الاستلام."],
+    ],
+    aboutCta: "تصفحوا المنتجات والأسعار",
     testimonialsEyebrow: "آراء عملائنا",
     testimonialsTitle: "ماذا يقول عملاؤنا؟",
-    testimonialsIntro: "ستُنشر آراء عملائنا هنا بعد الحصول على موافقتهم.",
-    testimonialsPlaceholder: "شهادة عميل قيد الإعداد",
-    testimonialAttribution: "اسم العميل قيد الإعداد",
-    footer: "طباعة متقنة. أفكار بلا حدود.",
-    admin: "مساحة الفريق",
-    location: "الساحلين، تونس",
-    language: "اللغة",
-    faqEyebrow: "أسئلة شائعة",
-    faqTitle: "إجابات قبل البدء.",
-    faqIntro: "تحتاجون إلى سعر أو نصيحة؟ إليكم طريقة تقديم الطلب لدى Fast Print Sahline.",
-    faqs: [
-      ["كيف أطلب عرض سعر أو أقدّم طلباً؟", "اختاروا منتجاً من الكتالوج، وحدّدوا المقاس والخيارات والكمية، ثم أدخلوا بياناتكم. حسب توفر السعر لاختياراتكم، يمكنكم تأكيد الطلب أو إرسال طلب عرض سعر."],
-      ["كيف يُحدّد السعر؟", "يعتمد السعر على المنتج والكمية والخيارات. يظهر السعر عند توفر تسعيرة معتمدة لاختياراتكم؛ وإلا يمكنكم إرسال طلب عرض سعر إلى الورشة."],
-      ["ما أنواع الملفات التي يمكن إرسالها؟", "يقبل النموذج ملفات PDF وPNG وJPEG وTIFF بحجم أقصى 25 ميغابايت. يراجع الفريق الملف قبل بدء الإنتاج."],
-      ["هل يمكن اختيار التوصيل؟", "يمكنكم اختيار الاستلام من الورشة أو التوصيل. عند اختيار التوصيل، يرجى إدخال العنوان في النموذج. يتم الدفع عند الاستلام أو التوصيل."],
-      ["هل يبدأ الإنتاج فور إرسال النموذج؟", "لا. تتم مراجعة الطلب والملف قبل الإنتاج. إذا كان السعر أو أحد التفاصيل بحاجة إلى تأكيد، تتواصل معكم الورشة قبل البدء."],
-    ],
-    contactEyebrow: "لنتحدث عن مشروعكم",
-    contactTitle: "لديكم فكرة للطباعة؟",
-    contactBody: "أخبرونا عن المنتج والكمية والتشطيبات المطلوبة لندرس طلبكم.",
-    phoneLabel: "اتصلوا بنا",
-    emailLabel: "راسلونا",
-    locationLabel: "الورشة",
-    contactLocation: "الساحلين، المنستير، تونس",
-    pricingEyebrow: "أسعار واضحة",
-    pricingTitle: "سعر يناسب مشروعكم.",
-    pricingBody: "تختلف الأسعار حسب المنتج والكمية والتشطيبات. تصفحوا الكتالوج للاطلاع على الأسعار المتاحة أو اطلبوا عرض سعر للخيارات الخاصة.",
-    pricingAction: "تصفحوا المنتجات",
+    testimonialsIntro: "آراء منشورة بموافقة عملائنا.",
+    faqAll: "كل الأسئلة",
   },
   en: {
-    eyebrow: "Digital printing · Graphic design · Sahline",
+    eyebrow: "Print & advertising studio · Sahline",
     headline: "Ideas,\nmade visible.",
-    intro:
-      "From graphic design to production, Fast Print Sahline personalises your print, signs, event decor and made-to-order creations.",
-    artCreative: "CREATIVITY",
-    artPrecision: "PRECISION",
-    artInnovation: "INNOVATION",
-    artSignature: "The art of printing",
-    explore: "Explore our services",
-    contact: "How does it work?",
-    note: "Final pricing depends on the product and finishing options. Request a quote for options not listed.",
-    categoriesTitle: "Every project starts with an idea.",
-    categoriesIntro:
-      "From everyday print essentials to one-of-a-kind creations, explore what's possible.",
-    categoriesVideoLabel: "Fast Print Sahline introduction video",
+    intro: "Signs, vehicle graphics, textiles, custom gifts and printed materials: Fast Print Sahline designs and produces your projects, from first idea to finished piece.",
+    primary: "Request a quote",
+    secondary: "See our work",
+    whatsapp: "Questions? Message us on WhatsApp",
+    assurances: ["Design support", "Files checked before printing", "Workshop pickup or delivery"],
+    signature: "“The art of printing”",
+    orbitLabel: "Our products",
+    partners: "Trusted by",
+    workEyebrow: "What we make",
+    workTitle: "Every project starts with an idea.",
+    workIntro: "From illuminated signs to corporate gifts, discover what we produce in our workshop every day.",
+    workCta: "See all our work",
     processEyebrow: "Print with confidence",
     processTitle: "Your order, step by step.",
     processIntro: "Get your project ready in four simple steps with our team.",
@@ -172,70 +176,101 @@ const copy = {
       ["03", "Confirm your order", "We check your file and confirm the price or quote before production."],
       ["04", "Collect your order", "Choose workshop collection or delivery."],
     ],
+    aboutEyebrow: "About Fast Print Sahline",
+    aboutTitle: "Printing, design and made-to-order creations.",
+    aboutBody: "Based in Sahline, Fast Print Sahline brings together digital printing, graphic design and custom production: printed materials, signs, event decor and products made to reflect your identity.",
+    videoLabel: "Fast Print Sahline workshop introduction video",
+    videoCaption: "Inside the workshop",
+    pauseVideo: "Pause video",
+    playVideo: "Play video",
+    promises: [
+      ["Graphic design", "No artwork yet? Our team creates or adapts your file for print."],
+      ["Checked before production", "The workshop reviews every file before printing begins."],
+      ["Clear pricing", "A price appears once it is approved; otherwise, the workshop prepares a quote."],
+      ["Pickup or delivery", "Collect your order in Sahline or have it delivered. Pay on receipt."],
+    ],
+    aboutCta: "Browse products and pricing",
     testimonialsEyebrow: "What our clients say",
     testimonialsTitle: "What our clients say.",
-    testimonialsIntro: "Client testimonials will be published here with their permission.",
-    testimonialsPlaceholder: "Testimonial to be added",
-    testimonialAttribution: "Client name to be added",
-    footer: "Thoughtful printing. Ideas without limits.",
-    admin: "Team workspace",
-    location: "Sahline, Tunisia",
-    language: "Language",
-    faqEyebrow: "Frequently asked questions",
-    faqTitle: "A few answers before you begin.",
-    faqIntro: "Need a price or some guidance? Here is how a request works at Fast Print Sahline.",
-    faqs: [
-      ["How do I request a quote or place an order?", "Choose a product from the catalogue, select its format and options, then enter the quantity and your contact details. Depending on whether a matching price is available, you can place an order or send a quote request."],
-      ["How is the price determined?", "Pricing depends on the product, quantity and selected options. A price appears when an approved rate matches your selection; otherwise, you can request a quote from the workshop."],
-      ["Which files can I send?", "The form accepts PDF, PNG, JPEG and TIFF files up to 25 MB. The team checks your file before production begins."],
-      ["Can I choose delivery?", "You can choose workshop collection or delivery. If you select delivery, enter your address in the form. Payment on the site is due at collection or delivery."],
-      ["Does production start as soon as I submit the form?", "No. Your request and file are reviewed first. If pricing or a detail needs confirmation, the workshop will contact you before production starts."],
-    ],
-    contactEyebrow: "Tell us about your project",
-    contactTitle: "Have an idea to print?",
-    contactBody: "Tell us what you need, how many you need and any finishes you have in mind. We can review your request.",
-    phoneLabel: "Call us",
-    emailLabel: "Email us",
-    locationLabel: "Workshop",
-    contactLocation: "Sahline, Monastir, Tunisia",
-    pricingEyebrow: "Clear pricing",
-    pricingTitle: "Pricing that fits your project.",
-    pricingBody: "Prices depend on the product, quantity and finishes. Browse the catalogue for available prices or request a quote for custom options.",
-    pricingAction: "Browse products",
+    testimonialsIntro: "Feedback published with our clients’ permission.",
+    faqAll: "All questions",
   },
 } as const;
 
-const aboutCopy: Record<Language, { eyebrow: string; title: string; body: string }> = {
-  fr: {
-    eyebrow: "À propos de Fast Print Sahline",
-    title: "Impression, design et créations sur mesure.",
-    body: "À Sahline, Fast Print Sahline réunit impression numérique, conception graphique et fabrication personnalisée : supports imprimés, enseignes, décoration événementielle et objets créés à votre image. Parcourez le catalogue ou échangez avec notre équipe pour préparer votre projet.",
-  },
-  ar: {
-    eyebrow: "من نحن · Fast Print Sahline",
-    title: "طباعة وتصميم وإبداعات حسب الطلب.",
-    body: "تجمع Fast Print Sahline في الساحلين بين الطباعة الرقمية والتصميم الجرافيكي والتصنيع المخصّص: المطبوعات واللافتات وديكورات المناسبات والمنتجات المصمّمة حسب هويتكم. تصفحوا الكتالوج أو تواصلوا مع فريقنا لتحضير مشروعكم.",
-  },
-  en: {
-    eyebrow: "About Fast Print Sahline",
-    title: "Printing, design and made-to-order creations.",
-    body: "Based in Sahline, Fast Print Sahline brings together digital printing, graphic design and custom production: printed materials, signs, event decor and products made to reflect your identity. Browse the catalogue or talk with our team about your project.",
-  },
-};
+function realisationCount(count: number, locale: Locale): string {
+  if (locale === "fr") return `${count} ${count > 1 ? "réalisations" : "réalisation"}`;
+  if (locale === "en") return `${count} ${count > 1 ? "projects" : "project"}`;
+  if (count === 1) return "عمل واحد";
+  if (count === 2) return "عملان";
+  return `${count} ${count <= 10 ? "أعمال" : "عملاً"}`;
+}
+
+function CheckIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m5 10.5 3.2 3L15 6.5" />
+    </svg>
+  );
+}
+
+function PromiseIcon({ index }: { index: number }) {
+  const paths = [
+    <><path d="m12 19 7-7 3 3-7 7-3-3Z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5Z" /><path d="m2 2 7.6 7.6" /><circle cx="11" cy="11" r="2" /></>,
+    <><path d="M12 3 19 6v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3Z" /><path d="m9 12 2 2 4-4" /></>,
+    <><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z" /><circle cx="7.5" cy="7.5" r="1.5" /></>,
+    <><path d="M3 7h11v9H3Z" /><path d="M14 10h4l3 3v3h-7Z" /><circle cx="7" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></>,
+  ];
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      {paths[index]}
+    </svg>
+  );
+}
 
 export default function Home() {
-  const [language, setLanguage] = useState<Language>("fr");
-  const categoryVideoRef = useRef<HTMLVideoElement>(null);
-  const text = copy[language];
-  const about = aboutCopy[language];
+  const [locale, setLocale] = useState<Locale>("fr");
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoPausedByVisitor = useRef(false);
+  const text = copy[locale];
+  const faq = faqContent[locale];
+
+  function changeLocale(nextLocale: Locale) {
+    setLocale(nextLocale);
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", nextLocale);
+    window.history.replaceState(null, "", url);
+  }
+
+  function toggleVideo() {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      videoPausedByVisitor.current = false;
+      void video.play().catch((error: unknown) => {
+        console.warn("La lecture de la vidéo a été bloquée.", error);
+      });
+    } else {
+      videoPausedByVisitor.current = true;
+      video.pause();
+    }
+  }
 
   useEffect(() => {
-    const video = categoryVideoRef.current;
+    setLocale(getLocale());
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
     if (!video) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      videoPausedByVisitor.current = true;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && !videoPausedByVisitor.current) {
           video.muted = true;
           void video.play().catch((error: unknown) => {
             console.warn("La lecture automatique de la vidéo a été bloquée.", error);
@@ -252,51 +287,66 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="home-page" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
-      <SiteHeader locale={language} onLocaleChange={setLanguage} />
+    <main className="home-page" dir={locale === "ar" ? "rtl" : "ltr"} lang={locale}>
+      <SiteHeader locale={locale} onLocaleChange={changeLocale} />
 
-      <section className="hero">
-        <div className="hero-copy">
+      <section className="home-hero" aria-labelledby="home-hero-title">
+        <div className="home-hero-copy">
           <p className="eyebrow"><span />{text.eyebrow}</p>
-          <h1>
+          <h1 id="home-hero-title">
             {text.headline.split("\n").map((line, index) => (
-              <span className={index === 1 ? "hero-highlight" : undefined} key={line}>
-                {line}
-              </span>
+              <span className={index === 1 ? "home-hero-highlight" : undefined} key={line}>{line}</span>
             ))}
           </h1>
-          <p className="hero-intro">{text.intro}</p>
-          <div className="hero-actions">
-            <a className="button button-dark" href={`/catalogue?lang=${language}`}>
-              {text.explore}<span aria-hidden="true">↗</span>
+          <p className="home-hero-intro">{text.intro}</p>
+          <div className="home-hero-actions">
+            <a className="button button-dark" href={`/devis?lang=${locale}`}>
+              {text.primary}<span aria-hidden="true">↗</span>
             </a>
-            <a className="text-link" href="#service-orbit">{text.contact}<span aria-hidden="true">→</span></a>
+            <a className="button button-outline" href={`/realisations?lang=${locale}`}>{text.secondary}</a>
           </div>
-          <p className="hero-note">{text.note}</p>
+          <a className="home-hero-whatsapp" href="https://wa.me/21623267178" rel="noreferrer" target="_blank">
+            <span className="home-online-dot" aria-hidden="true" />
+            {text.whatsapp}
+            <span aria-hidden="true">→</span>
+          </a>
+          <ul className="home-assurances">
+            {text.assurances.map((item) => (
+              <li key={item}><span aria-hidden="true"><CheckIcon /></span>{item}</li>
+            ))}
+          </ul>
         </div>
-        <div
-          className="hero-art"
-          role="img"
-          aria-label={`${text.artCreative}, ${text.artPrecision}, ${text.artInnovation} — ${text.artSignature}`}
-        >
-          <span className="hero-art-glow hero-art-glow-one" aria-hidden="true" />
-          <span className="hero-art-glow hero-art-glow-two" aria-hidden="true" />
-          <div className="hero-art-words" aria-hidden="true">
-            <span className="hero-art-line hero-art-line-one">{text.artCreative}</span>
-            <span className="hero-art-line hero-art-line-two">{text.artPrecision}</span>
-            <span className="hero-art-line hero-art-line-three">{text.artInnovation}</span>
+
+        <div className="home-orbit">
+          <span className="home-orbit-track" aria-hidden="true" />
+          <span className="home-orbit-dots" aria-hidden="true"><i /><i /><i /><i /></span>
+          <div className="home-orbit-core">
+            <Image alt="Fast Print Sahline" height={740} priority src="/fast-print-sahline.svg" width={1826} />
+            <p className="home-orbit-signature">{text.signature}</p>
           </div>
-          <span className="hero-art-signature" aria-hidden="true">
-            <span className="hero-art-quote">«</span>{text.artSignature}<span className="hero-art-quote">»</span>
-          </span>
-        </div>
-        <div className="hero-bottom">
-          <span>01 — 07</span><span className="hero-bottom-line" /><span>{text.location}</span>
+          <ul className="home-orbit-ring" aria-label={text.orbitLabel}>
+            {portfolioCategories.map((category, index) => {
+              const product = orbitProducts[category.id];
+              if (!product) return null;
+              const angle = (360 / portfolioCategories.length) * index - 90;
+
+              return (
+                <li className="home-orbit-node" key={category.id} style={{ "--orbit-angle": `${angle}deg` } as CSSProperties}>
+                  <a aria-label={category.title[locale]} href={`/realisations?lang=${locale}#portfolio-${category.id}`}>
+                    <span className="home-orbit-photo">
+                      <Image alt="" fill sizes="80px" src={`/portfolio/${category.id}/${product.image}`} />
+                    </span>
+                    <span className="home-orbit-label" aria-hidden="true">{product.label[locale]}</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </section>
 
-      <section className="partner-strip" aria-label={partnerHeadings[language]}>
-        <p className="partner-heading">{partnerHeadings[language]}</p>
+      <section className="partner-strip" aria-label={text.partners}>
+        <p className="partner-heading">{text.partners}</p>
         <div className="partner-marquee">
           <div className="partner-track">
             {[0, 1].map((copyIndex) => (
@@ -337,99 +387,148 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="services section-wrap" id="services">
-        <div className="section-heading">
+      <section className="home-work section-wrap" id="savoir-faire" aria-labelledby="home-work-title">
+        <div className="home-section-heading">
           <div>
-            <p className="eyebrow"><span />FAST PRINT · IMPRESSION & PUBLICITÉ</p>
-            <h2>{text.categoriesTitle}</h2>
+            <p className="eyebrow"><span />{text.workEyebrow}</p>
+            <h2 id="home-work-title">{text.workTitle}</h2>
           </div>
-          <p>{text.categoriesIntro}</p>
+          <div>
+            <p>{text.workIntro}</p>
+            <a className="text-link" href={`/realisations?lang=${locale}`}>
+              {text.workCta}<span aria-hidden="true">→</span>
+            </a>
+          </div>
         </div>
-        <div className="category-video">
-          <video
-            aria-label={text.categoriesVideoLabel}
-            controls
-            muted
-            playsInline
-            preload="metadata"
-            ref={categoryVideoRef}
-          >
-            <source src="/videos/services-showcase.mov" />
-          </video>
-        </div>
+        <ul className="home-work-grid">
+          {portfolioCategories.map((category) => {
+            const cover = workCovers[category.id] ?? { image: "01.jpg" };
+            const large = cover.layout !== undefined;
+
+            return (
+              <li className={large ? `home-work-tile home-work-tile-${cover.layout}` : "home-work-tile"} key={category.id}>
+                <a href={`/realisations?lang=${locale}#portfolio-${category.id}`}>
+                  <Image
+                    alt=""
+                    fill
+                    sizes={large ? "(max-width: 1000px) 92vw, 46vw" : "(max-width: 1000px) 46vw, 23vw"}
+                    src={`/portfolio/${category.id}/${cover.image}`}
+                  />
+                  <span className="home-work-number" aria-hidden="true">{category.number}</span>
+                  <span className="home-work-copy">
+                    <strong>{category.title[locale]}</strong>
+                    <small>{realisationCount(category.photos.length, locale)}</small>
+                  </span>
+                  <span className="home-work-arrow" aria-hidden="true">↗</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <ServiceOrbit
         eyebrow={text.processEyebrow}
         intro={text.processIntro}
-        locale={language}
+        locale={locale}
         steps={text.steps}
         title={text.processTitle}
       />
 
-      <section aria-labelledby="home-testimonials-title" className="home-testimonials section-wrap">
-        <div className="showcase-heading">
-          <div>
-            <p className="eyebrow"><span />{text.testimonialsEyebrow}</p>
-            <h2 id="home-testimonials-title">{text.testimonialsTitle}</h2>
-          </div>
-          <p>{text.testimonialsIntro}</p>
+      <section className="home-atelier section-wrap" id="about-us" aria-labelledby="home-atelier-title">
+        <div className="home-atelier-media">
+          <video
+            aria-label={text.videoLabel}
+            loop
+            muted
+            onPause={() => setVideoPlaying(false)}
+            onPlay={() => setVideoPlaying(true)}
+            playsInline
+            preload="metadata"
+            ref={videoRef}
+          >
+            <source src="/videos/services-showcase.mov" />
+          </video>
+          <span className="home-atelier-caption">{text.videoCaption}</span>
+          <button
+            aria-label={videoPlaying ? text.pauseVideo : text.playVideo}
+            className="home-video-toggle"
+            onClick={toggleVideo}
+            type="button"
+          >
+            {videoPlaying ? (
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="3.6" height="14" rx="1" /><rect x="13.9" y="5" width="3.6" height="14" rx="1" /></svg>
+            ) : (
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" /></svg>
+            )}
+          </button>
         </div>
-        <div className="testimonial-marquee">
-          <div className="testimonial-track">
-            {[0, 1].map((copyIndex) => (
-              <div className="testimonial-group" aria-hidden={copyIndex === 1} key={copyIndex}>
-                {[1, 2, 3].map((index) => (
-                  <figure className="testimonial-card" key={index}>
-                    <div className="testimonial-card-top">
-                      <span className="testimonial-quote-mark" aria-hidden="true">”</span>
-                    </div>
-                    <blockquote>{text.testimonialsPlaceholder}</blockquote>
-                    <figcaption>
-                      <span className="testimonial-avatar" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none">
-                          <circle cx="12" cy="8" r="3.5" />
-                          <path d="M5.5 20c.5-3.7 2.8-5.5 6.5-5.5s6 1.8 6.5 5.5" />
-                        </svg>
-                      </span>
-                      <strong>{text.testimonialAttribution}</strong>
-                    </figcaption>
-                  </figure>
-                ))}
-              </div>
+        <div className="home-atelier-copy">
+          <p className="eyebrow"><span />{text.aboutEyebrow}</p>
+          <h2 id="home-atelier-title">{text.aboutTitle}</h2>
+          <p className="home-atelier-body">{text.aboutBody}</p>
+          <ul className="home-promises">
+            {text.promises.map(([title, body], index) => (
+              <li id={index === 2 ? "tarifs" : undefined} key={title}>
+                <span className="home-promise-icon"><PromiseIcon index={index} /></span>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </div>
+              </li>
             ))}
+          </ul>
+          <a className="button button-dark" href={`/catalogue?lang=${locale}`}>
+            {text.aboutCta}<span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
+
+      {testimonials.length > 0 && (
+        <section aria-labelledby="home-testimonials-title" className="home-testimonials section-wrap">
+          <div className="showcase-heading">
+            <div>
+              <p className="eyebrow"><span />{text.testimonialsEyebrow}</p>
+              <h2 id="home-testimonials-title">{text.testimonialsTitle}</h2>
+            </div>
+            <p>{text.testimonialsIntro}</p>
           </div>
-        </div>
-      </section>
+          <div className="testimonial-marquee">
+            <div className="testimonial-track">
+              {[0, 1].map((copyIndex) => (
+                <div className="testimonial-group" aria-hidden={copyIndex === 1} key={copyIndex}>
+                  {testimonials.map((testimonial) => (
+                    <figure className="testimonial-card" key={testimonial.author}>
+                      <div className="testimonial-card-top">
+                        <span className="testimonial-quote-mark" aria-hidden="true">”</span>
+                      </div>
+                      <blockquote>{testimonial.quote[locale]}</blockquote>
+                      <figcaption>
+                        <span className="testimonial-avatar" aria-hidden="true">{testimonial.author.charAt(0)}</span>
+                        <strong>{testimonial.company ? `${testimonial.author} · ${testimonial.company}` : testimonial.author}</strong>
+                      </figcaption>
+                    </figure>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
-      <section className="about-section section-wrap" id="about-us">
-        <p className="eyebrow"><span />{about.eyebrow}</p>
-        <h2>{about.title}</h2>
-        <p>{about.body}</p>
-        <a className="button button-dark" href={`/services?lang=${language}`}>{text.explore}<span aria-hidden="true">↗</span></a>
-      </section>
-
-      <section className="pricing-section section-wrap" id="tarifs">
-        <div>
-          <p className="eyebrow"><span />{text.pricingEyebrow}</p>
-          <h2>{text.pricingTitle}</h2>
-          <p>{text.pricingBody}</p>
-        </div>
-        <a className="button button-dark" href={`/catalogue?lang=${language}`}>
-          {text.pricingAction}<span aria-hidden="true">↗</span>
-        </a>
-      </section>
-
-      <section className="faq faq-reference section-wrap" id="faq">
+      <section className="faq faq-reference section-wrap" id="faq" aria-labelledby="home-faq-title">
         <div className="section-heading">
           <div>
-            <p className="eyebrow"><span />{text.faqEyebrow}</p>
-            <h2>{text.faqTitle}</h2>
+            <p className="eyebrow"><span />{faq.eyebrow}</p>
+            <h2 id="home-faq-title">{faq.title}</h2>
           </div>
-          <p>{text.faqIntro}</p>
+          <p>{faq.intro}</p>
+          <a className="text-link faq-all-link" href={`/faq?lang=${locale}`}>
+            {text.faqAll}<span aria-hidden="true">→</span>
+          </a>
         </div>
         <div className="faq-list">
-          {text.faqs.map(([question, answer]) => (
+          {faq.questions.map(([question, answer]) => (
             <details className="faq-item" key={question}>
               <summary>{question}<span aria-hidden="true">+</span></summary>
               <p>{answer}</p>
@@ -438,7 +537,7 @@ export default function Home() {
         </div>
       </section>
 
-      <SiteFooter locale={language} />
+      <SiteFooter locale={locale} />
     </main>
   );
 }
